@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="和弦練習">
+  <meta name="theme-color" content="#1a1a2e">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <title>和弦練習</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- 頂部標題列 -->
+    <header class="app-header">
+      <h1>🎹 和弦練習</h1>
+      <div class="header-actions">
+        <button id="refreshBtn"  class="icon-btn" aria-label="換一題">🔄</button>
+        <button id="settingsBtn" class="icon-btn" aria-label="設定">⚙️</button>
+      </div>
+    </header>
+
+    <!-- 設定面板 -->
+    <div id="settingsPanel" class="settings-panel hidden">
+      <div class="settings-content">
+        <h2>設定</h2>
+
+        <!-- 練習類型 -->
+        <div class="setting-group">
+          <label>練習類型 <span class="label-hint">（可複選，至少一項）</span></label>
+          <div id="categoryList" class="category-list"></div>
+        </div>
+
+        <!-- 調性 -->
+        <div class="setting-group">
+          <label>調性</label>
+          <div class="key-selector" id="keySelector">
+            <button class="key-btn active" data-key="0">C</button>
+            <button class="key-btn" data-key="1">C#/Db</button>
+            <button class="key-btn" data-key="2">D</button>
+            <button class="key-btn" data-key="3">D#/Eb</button>
+            <button class="key-btn" data-key="4">E</button>
+            <button class="key-btn" data-key="5">F</button>
+            <button class="key-btn" data-key="6">F#/Gb</button>
+            <button class="key-btn" data-key="7">G</button>
+            <button class="key-btn" data-key="8">G#/Ab</button>
+            <button class="key-btn" data-key="9">A</button>
+            <button class="key-btn" data-key="10">A#/Bb</button>
+            <button class="key-btn" data-key="11">B</button>
+          </div>
+        </div>
+
+        <!-- 和弦範圍（僅對三和弦、七和弦有效） -->
+        <div class="setting-group">
+          <label>和弦範圍 <span class="label-hint">（三/七和弦有效）</span></label>
+          <div class="toggle-group">
+            <button class="toggle-btn active" id="diatonicBtn">調內和弦</button>
+            <button class="toggle-btn" id="allChordsBtn">所有和弦</button>
+          </div>
+        </div>
+
+        <!-- 輸入模式 -->
+        <div class="setting-group">
+          <label>輸入模式</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active" id="pianoModeBtn">鋼琴鍵盤</button>
+            <button class="toggle-btn" id="notationModeBtn">簡譜</button>
+          </div>
+        </div>
+
+        <!-- 聽和弦方式 -->
+        <div class="setting-group">
+          <label>聽和弦方式</label>
+          <div class="toggle-group">
+            <button class="toggle-btn" id="chordPlayBtn">同時播放</button>
+            <button class="toggle-btn active" id="arpPlayBtn">琶音播放</button>
+          </div>
+        </div>
+
+        <!-- 底部按鈕 -->
+        <button id="resetStatsBtn" class="reset-btn">重置統計資料</button>
+        <button id="closeSettingsBtn" class="primary-btn">確定</button>
+      </div>
+    </div>
+
+    <!-- 主練習區 -->
+    <main class="practice-area">
+
+      <!-- 分數列 -->
+      <div class="score-bar">
+        <div class="score-item">
+          <span class="score-label">正確</span>
+          <span class="score-value" id="correctCount">0</span>
+        </div>
+        <div class="score-item">
+          <span class="score-label">錯誤</span>
+          <span class="score-value" id="wrongCount">0</span>
+        </div>
+        <div class="score-item">
+          <span class="score-label">連續</span>
+          <span class="score-value" id="streakCount">0</span>
+        </div>
+      </div>
+
+      <!-- 題目顯示 -->
+      <div class="chord-display">
+        <div class="category-badge" id="categoryBadge">三和弦</div>
+        <div class="current-key" id="currentKeyDisplay">Key: C</div>
+        <div class="chord-name" id="chordNameDisplay">--</div>
+        <div class="chord-type" id="chordTypeDisplay"></div>
+        <div class="chord-extra hidden" id="chordExtraDisplay"></div>
+        <div class="chord-jianpu" id="chordJianpuDisplay"></div>
+      </div>
+
+      <!-- 回饋訊息 -->
+      <div class="feedback hidden" id="feedback">
+        <div class="feedback-icon" id="feedbackIcon"></div>
+        <div class="feedback-text" id="feedbackText"></div>
+        <div class="feedback-detail" id="feedbackDetail"></div>
+      </div>
+
+      <!-- 已選音符 -->
+      <div class="selected-display" id="selectedDisplay">
+        <span class="selected-label">已選：</span>
+        <span class="selected-notes" id="selectedNotesText">尚未選擇</span>
+      </div>
+
+      <!-- 鋼琴鍵盤 -->
+      <div id="pianoContainer" class="input-container"></div>
+
+      <!-- 簡譜 -->
+      <div id="notationContainer" class="input-container hidden"></div>
+
+      <!-- 操作按鈕 -->
+      <div class="action-buttons">
+        <button id="clearBtn"  class="action-btn secondary-btn">清除</button>
+        <button id="listenBtn" class="action-btn secondary-btn">🔊 聽和弦</button>
+        <button id="submitBtn" class="action-btn primary-btn">送出答案</button>
+      </div>
+      <div class="action-buttons" style="margin-top:8px">
+        <button id="nextBtn" class="action-btn primary-btn full-width hidden">下一題 →</button>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="js/chord.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/piano.js"></script>
+  <script src="js/notation.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
