@@ -52,6 +52,7 @@ function saveSettings(settings) {
     enabledCategories: ['triad'],
     enabledKeys:  [0],           // 可多選調性（pitch class 0-11）
     listenMode:   'arpeggio',    // 'chord' | 'arpeggio'
+    currentHint:  '',
     progress:     loadProgress(),
   };
 
@@ -76,6 +77,10 @@ function saveSettings(settings) {
     chordTypeDisplay:  $('#chordTypeDisplay'),
     chordExtraDisplay: $('#chordExtraDisplay'),
     chordJianpuDisplay:$('#chordJianpuDisplay'),
+    hintToggleBtn:     $('#hintToggleBtn'),
+    hintModal:         $('#hintModal'),
+    hintModalContent:  $('#hintModalContent'),
+    hintModalClose:    $('#hintModalClose'),
     currentKeyDisplay: $('#currentKeyDisplay'),
     categoryBadge:     $('#categoryBadge'),
     feedback:         $('#feedback'),
@@ -89,6 +94,7 @@ function saveSettings(settings) {
     pianoContainer:   $('#pianoContainer'),
     notationContainer:$('#notationContainer'),
     clearBtn:         $('#clearBtn'),
+    playSelectedBtn:  $('#playSelectedBtn'),
     listenBtn:        $('#listenBtn'),
     submitBtn:        $('#submitBtn'),
     nextBtn:          $('#nextBtn'),
@@ -177,7 +183,7 @@ function saveSettings(settings) {
     Object.entries(CHORD_CATEGORIES).forEach(([cat, info]) => {
       const isEnabled = state.enabledCategories.includes(cat);
       const row = document.createElement('div');
-      row.className = 'category-row';
+      row.className = `category-row${isEnabled ? ' cat-on' : ' cat-off'}`;
       row.dataset.cat = cat;
 
       row.innerHTML = `
@@ -190,41 +196,26 @@ function saveSettings(settings) {
         </div>
         <div class="cat-right">
           <span class="cat-acc" id="acc-${cat}">--</span>
-          <label class="cat-switch">
-            <input type="checkbox" id="cat-${cat}" ${isEnabled ? 'checked' : ''}>
-            <span class="switch-track" style="${isEnabled ? '--sw-color:'+info.color : ''}"></span>
-          </label>
+          <span class="cat-pill${isEnabled ? ' cat-pill-on' : ''}"
+                style="${isEnabled ? '--pill-color:'+info.color : ''}">
+            ${isEnabled ? '開' : '關'}
+          </span>
         </div>
       `;
 
-      // 點擊整列也切換
-      row.addEventListener('click', (e) => {
-        if (e.target.tagName === 'INPUT') return; // checkbox 自己處理
-        const chk = row.querySelector('input[type=checkbox]');
-        chk.checked = !chk.checked;
-        chk.dispatchEvent(new Event('change'));
-      });
-
-      const chk = row.querySelector('input[type=checkbox]');
-      chk.addEventListener('change', () => {
-        const track = row.querySelector('.switch-track');
-        if (chk.checked) {
-          if (!state.enabledCategories.includes(cat)) {
-            state.enabledCategories.push(cat);
-          }
-          track.style.setProperty('--sw-color', info.color);
-        } else {
-          // 至少保留一個分類
-          if (state.enabledCategories.length <= 1) {
-            chk.checked = true;
-            return;
-          }
+      row.addEventListener('click', () => {
+        const enabled = state.enabledCategories.includes(cat);
+        if (enabled) {
+          if (state.enabledCategories.length <= 1) return; // 至少一個
           state.enabledCategories = state.enabledCategories.filter(c => c !== cat);
-          track.style.removeProperty('--sw-color');
+        } else {
+          state.enabledCategories.push(cat);
         }
         chordGen.setEnabledCategories(state.enabledCategories);
         persistSettings();
         generateNewChord();
+        buildCategoryList();   // 重新繪製列表
+        updateAllAccuracy();
       });
 
       container.appendChild(row);
@@ -233,13 +224,25 @@ function saveSettings(settings) {
 
   function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
   }
 
   // ========== 事件綁定 ==========
 
   function bindEvents() {
+    // 提示彈窗
+    els.hintToggleBtn.addEventListener('click', () => {
+      els.hintModalContent.textContent = state.currentHint || '（尚未有題目）';
+      els.hintModal.classList.remove('hidden');
+    });
+    els.hintModalClose.addEventListener('click', () => {
+      els.hintModal.classList.add('hidden');
+    });
+    els.hintModal.addEventListener('click', (e) => {
+      if (e.target === els.hintModal) els.hintModal.classList.add('hidden');
+    });
+
     // 設定面板
     els.settingsBtn.addEventListener('click', () => {
       updateAllAccuracy();
@@ -336,6 +339,7 @@ function saveSettings(settings) {
 
     // 操作按鈕
     els.clearBtn.addEventListener('click', clearSelection);
+    els.playSelectedBtn.addEventListener('click', playSelected);
     els.listenBtn.addEventListener('click', listenChord);
     els.submitBtn.addEventListener('click', submitAnswer);
     els.nextBtn.addEventListener('click', nextQuestion);
@@ -396,6 +400,9 @@ function saveSettings(settings) {
     els.chordJianpuDisplay.textContent = `簡譜：${jianpu.join(' - ')}`;
     els.chordJianpuDisplay.style.display = 'none';
 
+    // 儲存提示文字（點擊 💡 時顯示）
+    state.currentHint = buildHint(chord, key);
+
     // 清除狀態
     clearSelection();
     hideFeedback();
@@ -455,6 +462,58 @@ function saveSettings(settings) {
 
       prevMidi = midi;
       return { note, octave };
+    });
+  }
+
+  // ── 提示文字產生 ────────────────────────────────────────
+  function buildHint(chord, key) {
+    const keyName  = NOTE_NAMES[key];
+    const jianpu   = chordGen.getJianpuForChord(chord).join(' - ');
+    const noteStr  = chord.notes.map(n => NOTE_NAMES[n]).join(' - ');
+
+    if (chord.category === 'inversion') {
+      const formula = getIntervalFormula(chord.type);
+      const desc    = CHORD_HINTS[chord.type] || CHORD_TYPES[chord.type].name;
+      return [
+        `${chord.typeName}`,
+        `原位結構：${desc}`,
+        `音程公式：${formula}`,
+        `低音音符：${chord.bassNoteName}（${chord.inversionName}）`,
+        `${keyName}調簡譜：${jianpu}`,
+        `音名：${noteStr}`,
+      ].join('\n');
+    }
+
+    if (chord.category === 'borrowed') {
+      const formula = getIntervalFormula(chord.type);
+      const desc    = CHORD_HINTS[chord.type] || '';
+      return [
+        `借自 ${keyName} 平行小調（${chord.degreeLabel}）`,
+        desc ? `和弦結構：${desc}` : '',
+        formula ? `音程公式：${formula}` : '',
+        `${keyName}調簡譜：${jianpu}`,
+        `音名：${noteStr}`,
+      ].filter(Boolean).join('\n');
+    }
+
+    const desc    = CHORD_HINTS[chord.type] || '';
+    const formula = getIntervalFormula(chord.type);
+    return [
+      desc ? `和弦結構：${desc}` : '',
+      formula ? `音程公式：${formula}` : '',
+      `${keyName}調簡譜：${jianpu}`,
+      `音名：${noteStr}`,
+    ].filter(Boolean).join('\n');
+  }
+
+  function playSelected() {
+    const activeInput = state.inputMode === 'piano' ? piano : notation;
+    const selected = activeInput.getSelectedNotes();
+    if (selected.length === 0) return;
+    audio.init();
+    // 同時播放所有已選音符
+    selected.forEach(noteIndex => {
+      audio.playNote(noteIndex, 4, 0.7);
     });
   }
 

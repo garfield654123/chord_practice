@@ -8,7 +8,9 @@
   <meta name="apple-mobile-web-app-title" content="和弦練習">
   <meta name="theme-color" content="#1a1a2e">
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="icons/icon-192.png">
   <title>和弦練習</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -108,6 +110,7 @@
 
       <!-- 題目顯示 -->
       <div class="chord-display">
+        <button id="hintToggleBtn" class="hint-toggle-btn" aria-label="提示">💡</button>
         <div class="category-badge" id="categoryBadge">三和弦</div>
         <div class="current-key" id="currentKeyDisplay">Key: C</div>
         <div class="chord-name" id="chordNameDisplay">--</div>
@@ -137,15 +140,27 @@
 
       <!-- 操作按鈕 -->
       <div class="action-buttons">
-        <button id="clearBtn"  class="action-btn secondary-btn">清除</button>
-        <button id="listenBtn" class="action-btn secondary-btn">🔊 聽和弦</button>
-        <button id="submitBtn" class="action-btn primary-btn">送出答案</button>
+        <button id="clearBtn"        class="action-btn secondary-btn">清除</button>
+        <button id="playSelectedBtn" class="action-btn secondary-btn">🎵 試聽</button>
+        <button id="listenBtn"       class="action-btn secondary-btn">🔊 聽題</button>
       </div>
       <div class="action-buttons" style="margin-top:8px">
-        <button id="nextBtn" class="action-btn primary-btn full-width hidden">下一題 →</button>
+        <button id="submitBtn" class="action-btn primary-btn full-width">送出答案</button>
+        <button id="nextBtn"   class="action-btn primary-btn full-width hidden">下一題 →</button>
       </div>
 
     </main>
+  </div>
+
+  <!-- 提示彈窗 -->
+  <div id="hintModal" class="hint-modal hidden">
+    <div class="hint-modal-card">
+      <div class="hint-modal-header">
+        <span class="hint-modal-title">💡 和弦提示</span>
+        <button id="hintModalClose" class="hint-modal-close" aria-label="關閉">✕</button>
+      </div>
+      <div id="hintModalContent" class="hint-modal-content"></div>
+    </div>
   </div>
 
   <script src="js/chord.js"></script>

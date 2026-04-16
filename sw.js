@@ -1,16 +1,17 @@
-const CACHE_NAME = 'chord-practice-v5';
+const CACHE_NAME = 'chord-practice-v12';
+const BASE = '/chord_practice';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/css/style.css',
-  '/js/app.js',
-  '/js/audio.js',
-  '/js/piano.js',
-  '/js/chord.js',
-  '/js/notation.js',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  BASE + '/',
+  BASE + '/index.html',
+  BASE + '/css/style.css',
+  BASE + '/js/app.js',
+  BASE + '/js/audio.js',
+  BASE + '/js/piano.js',
+  BASE + '/js/chord.js',
+  BASE + '/js/notation.js',
+  BASE + '/manifest.json',
+  BASE + '/icons/icon-192.png',
+  BASE + '/icons/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
