@@ -22,7 +22,7 @@
   /* 功能色 */
   --success:        #059669;
   --danger:         #dc2626;
-  --warning:        #d97706;
+  --warning:        #c9a227;
   --selected:       #6b7280;
   --correct:        #059669;
   --wrong:          #dc2626;
@@ -212,34 +212,26 @@ body::before {
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Toggle Switch ──────────────────────────────────── */
-.cat-switch {
-  position: relative;
-  display: inline-block;
-  width: 46px; height: 26px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.cat-switch input { opacity:0; width:0; height:0; position:absolute; }
+/* ── Category Pill Toggle ───────────────────────────── */
+.category-row.cat-on  { background: rgba(255,255,255,0.76); }
+.category-row.cat-off { opacity: 0.60; }
+.category-row:active  { transform: scale(0.985); }
 
-.switch-track {
-  position: absolute; inset: 0;
-  background: rgba(0, 0, 0, 0.13);
-  border-radius: 13px;
-  transition: background 0.22s;
+.cat-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 20px;
+  background: rgba(0,0,0,0.10);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+  letter-spacing: 0.4px;
 }
-.switch-track::before {
-  content: '';
-  position: absolute;
-  width: 20px; height: 20px;
-  left: 3px; top: 3px;
-  background: white;
-  border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.22);
-  transition: transform 0.22s cubic-bezier(.34,1.3,.7,1);
+.cat-pill.cat-pill-on {
+  background: var(--pill-color, var(--accent));
+  color: white;
 }
-.cat-switch input:checked + .switch-track          { background: var(--sw-color, var(--accent)); }
-.cat-switch input:checked + .switch-track::before  { transform: translateX(20px); }
 
 /* ── Key Selector ───────────────────────────────────── */
 .key-selector {
@@ -352,7 +344,8 @@ body::before {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: hidden;
+  overflow-x: clip; /* 裁切視覺但不阻斷子元件的 scroll context */
   padding: 10px 12px;
   gap: 8px;
 }
@@ -407,6 +400,7 @@ body::before {
 
 /* ── Chord Display ──────────────────────────────────── */
 .chord-display {
+  position: relative;
   text-align: center;
   padding: 14px 16px;
   background: var(--glass);
@@ -415,6 +409,90 @@ body::before {
   border: 1px solid var(--glass-border);
   border-radius: 20px;
   box-shadow: var(--glass-shadow-lg);
+}
+
+/* 提示切換按鈕（右上角） */
+.hint-toggle-btn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 17px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 8px;
+  opacity: 0.45;
+  transition: opacity 0.15s, background 0.15s;
+  line-height: 1;
+}
+.hint-toggle-btn:active { opacity: 1; background: rgba(0,0,0,0.06); }
+
+/* ── 提示彈窗 ────────────────────────────────────────── */
+.hint-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.14);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter:         blur(12px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.hint-modal.hidden { display: none; }
+
+.hint-modal-card {
+  background: rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  backdrop-filter:         blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 22px;
+  padding: 22px 20px 24px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.14), 0 2px 0 rgba(255,255,255,0.9) inset;
+  animation: hintFadeIn 0.22s ease;
+}
+
+@keyframes hintFadeIn {
+  from { opacity:0; transform: scale(0.95) translateY(8px); }
+  to   { opacity:1; transform: scale(1) translateY(0); }
+}
+
+.hint-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.hint-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.hint-modal-close {
+  background: rgba(0,0,0,0.06);
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.hint-modal-close:active { background: rgba(0,0,0,0.12); }
+
+.hint-modal-content {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.9;
+  white-space: pre-line;
 }
 
 /* 分類徽章：顏色由 JS 設定 */
@@ -534,27 +612,51 @@ body::before {
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; /* 讓內容從左對齊，配合水平滾動 */
   min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
 }
+.input-container::-webkit-scrollbar { display: none; } /* Chrome/Safari */
 .input-container.hidden { display: none; }
 
-/* ── Piano Keyboard ─────────────────────────────────── */
+/* ── Piano Keyboard（上下雙排） ──────────────────────── */
 .piano-keyboard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+/* 每個八度的一排（標籤 + 鍵盤） */
+.piano-row {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
 }
 
-.piano-keys {
+/* 左側八度標籤（如 C4 / C3） */
+.piano-row-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  width: 14px;
+  flex-shrink: 0;
+  opacity: 0.55;
+  letter-spacing: 0.5px;
+}
+
+.piano-octave {
   display: flex;
-  height: 180px;
   position: relative;
-  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.10));
+  filter: drop-shadow(0 6px 16px rgba(0,0,0,0.10));
 }
-
-.piano-octave { display: flex; position: relative; }
 
 .piano-key {
   display: flex;
@@ -566,9 +668,10 @@ body::before {
   transition: background 0.08s;
 }
 
-/* 白鍵 */
+/* ── 白鍵（每排 7 鍵，尺寸加大） ──────────────────────── */
 .white-key {
-  width: 40px; height: 180px;
+  width: 44px;
+  height: clamp(110px, 18vh, 165px);
   background: var(--white-key);
   border: 1px solid rgba(180,160,220,0.30);
   border-radius: 0 0 10px 10px;
@@ -580,9 +683,10 @@ body::before {
 .white-key:active { background: #f0ecff; }
 .white-key .key-label { color: #9080c0; font-size: 10px; font-weight: 600; }
 
-/* 黑鍵 */
+/* ── 黑鍵 ──────────────────────────────────────────────── */
 .black-key {
-  width: 28px; height: 112px;
+  width: 28px;
+  height: clamp(68px, 11vh, 103px);
   background: linear-gradient(180deg, #2d1b4e 0%, #160d2e 100%);
   border: 1px solid rgba(50,30,80,0.6);
   border-radius: 0 0 7px 7px;
@@ -594,6 +698,20 @@ body::before {
 }
 .black-key:active { background: linear-gradient(180deg, #4a2e7a 0%, #2d1b4e 100%); }
 .black-key .key-label { color: rgba(255,255,255,0.45); font-size: 9px; font-weight: 500; }
+
+/* 根音（金色標示） */
+.piano-key.root-note.white-key {
+  background: linear-gradient(180deg, #fef8d6 0%, #f5e070 100%);
+  border-color: #c9a227;
+  box-shadow: inset 0 0 0 2px #c9a227, 0 4px 10px rgba(201,162,39,0.30);
+}
+.piano-key.root-note.white-key .key-label { color: #7a6210; font-weight: 800; }
+
+.piano-key.root-note.black-key {
+  background: linear-gradient(180deg, #c9a227 0%, #7a6210 100%);
+  box-shadow: 0 4px 12px rgba(201,162,39,0.45), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.piano-key.root-note.black-key .key-label { color: white; }
 
 /* 選取 / 高亮狀態 */
 .piano-key.selected.white-key {
@@ -630,58 +748,232 @@ body::before {
 .piano-key.correct-highlight .key-label,
 .piano-key.wrong-highlight .key-label { color: white; font-weight: 700; }
 
-/* ── Notation Mode ──────────────────────────────────── */
-.notation-mode { width: 100%; }
+/* ── Notation Keyboard (Piano Layout) ───────────────────── */
 
-.notation-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  padding: 8px;
+.notation-keyboard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto; /* 在 flex-start 容器中自動置中 */
+  flex-shrink: 0;
 }
 
-.notation-btn {
-  padding: 16px 8px;
-  background: var(--glass);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter:         blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: 14px;
-  color: var(--text-primary);
-  font-size: 20px;
-  font-weight: 700;
+.nk-keys {
+  display: flex;
+  height: 200px;
+  position: relative;
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,0.09));
+}
+
+.nk-key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 8px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  transition: all 0.1s;
-  text-align: center;
+  position: relative;
+  transition: background 0.08s;
+  user-select: none;
+  -webkit-user-select: none;
 }
-.notation-btn.sharp-btn {
-  background: rgba(255,255,255,0.40);
-  color: var(--text-secondary);
-  font-size: 16px;
+
+/* 白鍵 */
+.nk-white {
+  width: 48px;
+  height: 200px;
+  background: #ffffff;
+  border: 1px solid rgba(180,160,220,0.28);
+  border-radius: 0 0 10px 10px;
+  z-index: 1;
+  box-shadow:
+    inset 0 -3px 6px rgba(0,0,0,0.05),
+    0 3px 8px rgba(0,0,0,0.09);
 }
-.notation-btn.selected {
-  background: rgba(var(--accent-rgb), 0.12);
+.nk-white:active { background: #f0ecff; }
+
+/* 黑鍵 */
+.nk-black {
+  width: 30px;
+  height: 125px;
+  background: linear-gradient(180deg, #2d1b4e 0%, #160d2e 100%);
+  border: 1px solid rgba(50,30,80,0.6);
+  border-radius: 0 0 7px 7px;
+  z-index: 2;
+  margin-left: -15px;
+  margin-right: -15px;
+  box-shadow:
+    0 6px 14px rgba(0,0,0,0.32),
+    inset 0 1px 0 rgba(255,255,255,0.10);
+  padding-bottom: 6px;
+}
+.nk-black:active { background: linear-gradient(180deg, #4a2e7a 0%, #2d1b4e 100%); }
+
+/* 標籤 */
+.nk-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #9080c0;
+  line-height: 1;
+}
+.nk-black .nk-label {
+  color: rgba(255,255,255,0.45);
+  font-size: 11px;
+}
+
+.nk-sub {
+  font-size: 9px;
+  color: rgba(144,128,192,0.65);
+  margin-top: 2px;
+  line-height: 1;
+}
+
+/* ── 選取狀態 ────────────────────────────────────────────── */
+.nk-key.selected.nk-white {
+  background: linear-gradient(180deg, #e5e7eb 0%, #d1d5db 100%);
   border-color: var(--accent);
-  color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), 0 4px 12px rgba(var(--accent-rgb),0.20);
+  box-shadow: inset 0 0 0 2px var(--accent), 0 3px 8px rgba(var(--accent-rgb),0.22);
 }
-.notation-btn.correct-highlight {
-  background: rgba(5,150,105,0.10);
+.nk-key.selected.nk-white .nk-label { color: var(--accent); font-weight: 800; }
+.nk-key.selected.nk-white .nk-sub   { color: var(--accent); opacity: 0.7; }
+
+.nk-key.selected.nk-black {
+  background: linear-gradient(180deg, #6b7280 0%, #4b5563 100%);
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb),0.40), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.nk-key.selected.nk-black .nk-label { color: white; }
+
+/* ── 答題高亮 ────────────────────────────────────────────── */
+.nk-key.correct-highlight.nk-white {
+  background: linear-gradient(180deg, #d1fae5 0%, #6ee7b7 100%);
+  border-color: var(--success);
+  box-shadow: inset 0 0 0 2px var(--success), 0 3px 8px rgba(5,150,105,0.22);
+}
+.nk-key.correct-highlight.nk-black {
+  background: linear-gradient(180deg, #059669 0%, #065f46 100%);
+  box-shadow: 0 4px 12px rgba(5,150,105,0.40);
+}
+.nk-key.wrong-highlight.nk-white {
+  background: linear-gradient(180deg, #fee2e2 0%, #fca5a5 100%);
+  border-color: var(--wrong);
+  box-shadow: inset 0 0 0 2px var(--wrong), 0 3px 8px rgba(220,38,38,0.20);
+}
+.nk-key.wrong-highlight.nk-black {
+  background: linear-gradient(180deg, #dc2626 0%, #991b1b 100%);
+  box-shadow: 0 4px 12px rgba(220,38,38,0.38);
+}
+.nk-key.correct-highlight .nk-label,
+.nk-key.wrong-highlight .nk-label { color: white; font-weight: 700; }
+
+/* ── 根音高亮（琥珀橘色，與一般選取色區分） ─────────────── */
+.nk-key.root-note.nk-white {
+  background: linear-gradient(180deg, #fef8d6 0%, #f5e070 100%);
+  border-color: #c9a227;
+  box-shadow: inset 0 0 0 2px #c9a227, 0 3px 8px rgba(201,162,39,0.30);
+}
+.nk-key.root-note.nk-white .nk-label { color: #7a6210; font-weight: 800; }
+.nk-key.root-note.nk-white .nk-sub   { color: #9a7c18; }
+
+.nk-key.root-note.nk-black {
+  background: linear-gradient(180deg, #c9a227 0%, #7a6210 100%);
+  box-shadow: 0 4px 12px rgba(201,162,39,0.45), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.nk-key.root-note.nk-black .nk-label { color: white; }
+
+/* ── 鍵盤容器置中 ────────────────────────────────────────── */
+#pianoContainer,
+#notationContainer {
+  justify-content: center;
+  align-items: center;
+}
+
+.notation-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.nk-piano-section {
+  display: flex;
+  justify-content: center;
+}
+
+/* ── 根音選擇列（兩排） ────────────────────────────────────── */
+.nk-root-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+}
+
+.nk-root-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* 共用 row 樣式 */
+.nk-root-row {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* 升號排：5 個按鈕，置中對齊 */
+.nk-root-row--sharp { }
+
+/* 自然音排：7 個按鈕 */
+.nk-root-row--natural { }
+
+/* 按鈕共用 */
+.nk-root-btn {
+  width: 40px;
+  padding: 8px 0;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter:         blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  transition: all 0.12s;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* 升號按鈕（稍矮、顏色較淡） */
+.nk-root-sharp {
+  color: var(--text-secondary);
+  font-size: 10px;
+  padding: 6px 0;
+  background: rgba(255,255,255,0.40);
+}
+
+.nk-root-btn.active {
+  background: #c9a227;
+  border-color: #c9a227;
+  color: white;
+  box-shadow: 0 3px 10px rgba(201,162,39,0.40);
+}
+.nk-root-btn.correct-highlight {
+  background: rgba(5,150,105,0.12);
   border-color: var(--success);
   color: var(--success);
-  box-shadow: 0 0 0 1px var(--success), 0 4px 10px rgba(5,150,105,0.18);
 }
-.notation-btn.wrong-highlight {
-  background: rgba(220,38,38,0.10);
-  border-color: var(--wrong);
-  color: var(--wrong);
-  box-shadow: 0 0 0 1px var(--wrong), 0 4px 10px rgba(220,38,38,0.18);
-}
-.notation-btn:active { transform: scale(0.94); }
+.nk-root-btn:active { transform: scale(0.94); }
 
-.notation-label   { font-size: 22px; font-weight: 700; }
-.notation-sublabel { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+/* 窄螢幕縮小按鈕 */
+@media (max-width: 360px) {
+  .nk-root-btn { width: 34px; font-size: 11px; }
+  .nk-root-sharp { font-size: 9px; }
+}
 
 /* ── Action Buttons ─────────────────────────────────── */
 .action-buttons { display: flex; gap: 8px; }
@@ -692,17 +984,35 @@ body::before {
 .hidden { display: none !important; }
 
 /* ── Responsive ─────────────────────────────────────── */
-@media (max-height: 600px) {
-  .chord-display { padding: 8px 12px; }
-  .chord-name    { font-size: 32px; }
-  .piano-keys    { height: 140px; }
-  .white-key     { width: 32px; height: 140px; }
-  .black-key     { width: 22px; height: 86px; margin-left: -11px; margin-right: -11px; }
+
+/* 中等高度（iPhone SE 直式）：壓縮上方元件騰出鍵盤空間 */
+@media (max-height: 720px) {
+  .practice-area   { gap: 6px; padding: 8px 12px; }
+  .chord-display   { padding: 10px 14px; }
+  .chord-name      { font-size: 36px; }
+  .score-bar       { padding: 4px; }
+  .primary-btn     { padding: 13px; }
+  .secondary-btn   { padding: 10px 14px; }
 }
 
-@media (max-width: 375px) {
-  .white-key     { width: 34px; }
-  .black-key     { width: 24px; margin-left: -12px; margin-right: -12px; }
-  .notation-grid { gap: 6px; padding: 4px; }
-  .notation-btn  { padding: 12px 6px; }
+/* 矮螢幕 / 橫式 */
+@media (max-height: 600px) {
+  .chord-display { padding: 6px 12px; }
+  .chord-name    { font-size: 28px; }
+  .piano-keyboard { gap: 6px; }
+  /* 白鍵高度已用 clamp() 自動縮小，只需縮小寬度 */
+  .white-key     { width: 36px; }
+  .black-key     { width: 22px; margin-left: -11px; margin-right: -11px; }
+  .nk-keys       { height: 130px; }
+  .nk-white      { width: 38px; height: 130px; }
+  .nk-black      { width: 24px; height: 82px; margin-left: -12px; margin-right: -12px; }
+}
+
+/* 極窄螢幕（≤360px，如 iPhone SE 320px）：縮小簡譜鍵盤 */
+@media (max-width: 360px) {
+  .nk-white   { width: 38px; height: 165px; }
+  .nk-black   { width: 24px; height: 103px; margin-left: -12px; margin-right: -12px; }
+  .nk-keys    { height: 165px; }
+  .nk-root-btn { width: 32px; font-size: 10px; }
+  .nk-root-sharp { font-size: 8px; }
 }

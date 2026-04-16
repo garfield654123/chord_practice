@@ -405,6 +405,7 @@ function saveSettings(settings) {
 
     // 清除狀態
     clearSelection();
+    if (piano) piano.setRootNote(state.currentChord.root);
     hideFeedback();
     els.nextBtn.classList.add('hidden');
     els.submitBtn.classList.remove('hidden');

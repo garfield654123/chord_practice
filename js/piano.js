@@ -1,50 +1,61 @@
-// piano.js - 鋼琴鍵盤 UI 模組
+// piano.js - 鋼琴鍵盤 UI 模組（上下兩排：高音在上、低音在下）
 
 class PianoKeyboard {
   constructor(containerId, options = {}) {
     this.container = document.getElementById(containerId);
     this.startOctave = options.startOctave || 3;
     this.octaves = options.octaves || 2;
-    this.selectedNotes = new Set(); // 儲存被選取的音符 (0-11)
+    this.selectedNotes = new Set();
     this.onNoteClick = options.onNoteClick || null;
     this.audio = options.audio || null;
     this.showLabels = options.showLabels !== false;
+    this.rootNote = null;
     this.render();
   }
 
-  // 白鍵與黑鍵的佈局
   static KEY_LAYOUT = [
-    { note: 0, type: 'white', label: 'C' },
-    { note: 1, type: 'black', label: 'C#' },
-    { note: 2, type: 'white', label: 'D' },
-    { note: 3, type: 'black', label: 'D#' },
-    { note: 4, type: 'white', label: 'E' },
-    { note: 5, type: 'white', label: 'F' },
-    { note: 6, type: 'black', label: 'F#' },
-    { note: 7, type: 'white', label: 'G' },
-    { note: 8, type: 'black', label: 'G#' },
-    { note: 9, type: 'white', label: 'A' },
+    { note: 0,  type: 'white', label: 'C'  },
+    { note: 1,  type: 'black', label: 'C#' },
+    { note: 2,  type: 'white', label: 'D'  },
+    { note: 3,  type: 'black', label: 'D#' },
+    { note: 4,  type: 'white', label: 'E'  },
+    { note: 5,  type: 'white', label: 'F'  },
+    { note: 6,  type: 'black', label: 'F#' },
+    { note: 7,  type: 'white', label: 'G'  },
+    { note: 8,  type: 'black', label: 'G#' },
+    { note: 9,  type: 'white', label: 'A'  },
     { note: 10, type: 'black', label: 'A#' },
-    { note: 11, type: 'white', label: 'B' },
+    { note: 11, type: 'white', label: 'B'  },
   ];
 
   render() {
     this.container.innerHTML = '';
     this.container.classList.add('piano-keyboard');
 
-    const keyboard = document.createElement('div');
-    keyboard.className = 'piano-keys';
+    // 從高到低排列：最高八度在最上方
+    for (let oct = this.startOctave + this.octaves - 1; oct >= this.startOctave; oct--) {
+      const row = document.createElement('div');
+      row.className = 'piano-row';
 
-    for (let oct = this.startOctave; oct < this.startOctave + this.octaves; oct++) {
+      // 左側八度標籤
+      const rowLabel = document.createElement('div');
+      rowLabel.className = 'piano-row-label';
+      rowLabel.textContent = `C${oct}`;
+      row.appendChild(rowLabel);
+
+      // 鍵盤本體
       const octaveDiv = document.createElement('div');
       octaveDiv.className = 'piano-octave';
 
       PianoKeyboard.KEY_LAYOUT.forEach(keyDef => {
         const key = document.createElement('div');
         key.className = `piano-key ${keyDef.type}-key`;
-        key.dataset.note = keyDef.note;
+        key.dataset.note   = keyDef.note;
         key.dataset.octave = oct;
 
+        if (this.rootNote === keyDef.note && oct === this.startOctave) {
+          key.classList.add('root-note');
+        }
         if (this.selectedNotes.has(keyDef.note)) {
           key.classList.add('selected');
         }
@@ -56,58 +67,46 @@ class PianoKeyboard {
           key.appendChild(label);
         }
 
-        // touch 和 click 事件
         key.addEventListener('pointerdown', (e) => {
           e.preventDefault();
           this._handleKeyPress(keyDef.note, oct);
         });
 
-        if (keyDef.type === 'white') {
-          octaveDiv.appendChild(key);
-        } else {
-          key.classList.add('black-key-overlay');
-          octaveDiv.appendChild(key);
-        }
+        octaveDiv.appendChild(key);
       });
 
-      keyboard.appendChild(octaveDiv);
+      row.appendChild(octaveDiv);
+      this.container.appendChild(row);
     }
-
-    this.container.appendChild(keyboard);
   }
 
   _handleKeyPress(noteIndex, octave) {
-    // 播放音效
     if (this.audio) {
       this.audio.playNote(noteIndex, octave, 0.8);
     }
-
-    // 切換選取狀態
     if (this.selectedNotes.has(noteIndex)) {
       this.selectedNotes.delete(noteIndex);
     } else {
       this.selectedNotes.add(noteIndex);
     }
-
-    // 更新 UI
     this._updateKeyStates();
-
-    // 回呼
     if (this.onNoteClick) {
       this.onNoteClick(noteIndex, octave, [...this.selectedNotes]);
     }
   }
 
   _updateKeyStates() {
-    const keys = this.container.querySelectorAll('.piano-key');
-    keys.forEach(key => {
-      const note = parseInt(key.dataset.note);
-      if (this.selectedNotes.has(note)) {
-        key.classList.add('selected');
-      } else {
-        key.classList.remove('selected');
-      }
+    this.container.querySelectorAll('.piano-key').forEach(key => {
+      const note   = parseInt(key.dataset.note);
+      const octave = parseInt(key.dataset.octave);
+      key.classList.toggle('root-note', note === this.rootNote && octave === this.startOctave);
+      key.classList.toggle('selected', this.selectedNotes.has(note));
     });
+  }
+
+  setRootNote(note) {
+    this.rootNote = note;
+    this._updateKeyStates();
   }
 
   getSelectedNotes() {
@@ -119,30 +118,23 @@ class PianoKeyboard {
     this._updateKeyStates();
   }
 
-  // 高亮正確答案
   showCorrectAnswer(notes) {
-    const keys = this.container.querySelectorAll('.piano-key');
-    keys.forEach(key => {
-      const note = parseInt(key.dataset.note);
-      if (notes.includes(note)) {
+    this.container.querySelectorAll('.piano-key').forEach(key => {
+      if (notes.includes(parseInt(key.dataset.note))) {
         key.classList.add('correct-highlight');
       }
     });
   }
 
   clearHighlights() {
-    const keys = this.container.querySelectorAll('.piano-key');
-    keys.forEach(key => {
-      key.classList.remove('correct-highlight');
-      key.classList.remove('wrong-highlight');
+    this.container.querySelectorAll('.piano-key').forEach(key => {
+      key.classList.remove('correct-highlight', 'wrong-highlight');
     });
   }
 
-  // 顯示錯誤標記
   showWrongNotes(selectedNotes, correctNotes) {
     const correctSet = new Set(correctNotes);
-    const keys = this.container.querySelectorAll('.piano-key');
-    keys.forEach(key => {
+    this.container.querySelectorAll('.piano-key').forEach(key => {
       const note = parseInt(key.dataset.note);
       if (this.selectedNotes.has(note) && !correctSet.has(note)) {
         key.classList.add('wrong-highlight');

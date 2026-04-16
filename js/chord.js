@@ -201,11 +201,48 @@ class ChordGenerator {
   }
 }
 
+// ── 音程度數名稱（半音 → 唱名）────────────────────────────
+const DEGREE_NAMES = ['1','♭2','2','♭3','3','4','♭5','5','♯5','6','♭7','7'];
+
+// ── 和弦提示文字 ──────────────────────────────────────────
+const CHORD_HINTS = {
+  'maj':   '大三度＋純五度',
+  'min':   '小三度＋純五度',
+  'dim':   '小三度＋減五度',
+  'aug':   '大三度＋增五度',
+  'sus2':  '大二度＋純五度（以 2 代替 3 音）',
+  'sus4':  '純四度＋純五度（以 4 代替 3 音）',
+  'maj7':  '大三和弦＋大七度',
+  'min7':  '小三和弦＋小七度',
+  '7':     '大三和弦＋小七度（屬七）',
+  'dim7':  '減三和弦＋減七度（全減）',
+  'm7b5':  '減三和弦＋小七度（半減）',
+  'mMaj7': '小三和弦＋大七度',
+  '6':     '大三和弦＋大六度',
+  'min6':  '小三和弦＋大六度',
+  'add9':  '大三和弦＋大九度（無七音）',
+  'maj9':  '大七和弦＋大九度',
+  '9':     '屬七和弦＋大九度',
+  'min9':  '小七和弦＋大九度',
+  '6/9':   '大三和弦＋大六度＋大九度',
+  'maj11': '大九和弦＋純十一度',
+  '11':    '屬九和弦＋純十一度',
+};
+
+// 根據 CHORD_TYPES 的 intervals 計算音程公式字串，例如 "1 - ♭3 - 5 - ♭7"
+function getIntervalFormula(type) {
+  const intervals = (CHORD_TYPES[type] || {}).intervals || [];
+  return intervals.map(i => DEGREE_NAMES[i]).join(' - ');
+}
+
 // 匯出
-window.ChordGenerator         = ChordGenerator;
-window.NOTE_NAMES             = NOTE_NAMES;
-window.NOTE_NAMES_FLAT        = NOTE_NAMES_FLAT;
-window.CHORD_TYPES            = CHORD_TYPES;
-window.CHORD_CATEGORIES       = CHORD_CATEGORIES;
-window.JIANPU_MAP             = JIANPU_MAP;
+window.ChordGenerator          = ChordGenerator;
+window.NOTE_NAMES              = NOTE_NAMES;
+window.NOTE_NAMES_FLAT         = NOTE_NAMES_FLAT;
+window.CHORD_TYPES             = CHORD_TYPES;
+window.CHORD_CATEGORIES        = CHORD_CATEGORIES;
+window.JIANPU_MAP              = JIANPU_MAP;
 window.BORROWED_CHORD_PATTERNS = BORROWED_CHORD_PATTERNS;
+window.CHORD_HINTS             = CHORD_HINTS;
+window.DEGREE_NAMES            = DEGREE_NAMES;
+window.getIntervalFormula      = getIntervalFormula;

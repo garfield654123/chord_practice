@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chord-practice-v12';
+const CACHE_NAME = 'chord-practice-v13';
 const BASE = '/chord_practice';
 const ASSETS = [
   BASE + '/',
