@@ -60,11 +60,13 @@
 
   // ========== 和弦查詢頁邏輯 ==========
   const els = {
-    keySelector: $('#lookupKeySelector'),
-    chordName:   $('#lookupChordName'),
-    notesText:   $('#lookupNotesText'),
-    clearBtn:    $('#lookupClearBtn'),
-    centerBtn:   $('#lookupCenterBtn'),
+    keyGroup:      $('#lookupKeyGroup'),
+    keySelector:   $('#lookupKeySelector'),
+    keySummary:    $('#lookupKeySummaryValue'),
+    chordName:     $('#lookupChordName'),
+    notesText:     $('#lookupNotesText'),
+    clearBtn:      $('#lookupClearBtn'),
+    centerBtn:     $('#lookupCenterBtn'),
   };
 
   if (!els.keySelector) return; // 頁面元素不存在就不初始化（防呆）
@@ -86,6 +88,8 @@
       if (!btn) return;
       state.keyIndex = parseInt(btn.dataset.key, 10);
       els.keySelector.querySelectorAll('.key-btn').forEach(b => b.classList.toggle('active', b === btn));
+      els.keySummary.textContent = NOTE_NAMES[state.keyIndex];
+      if (els.keyGroup) els.keyGroup.open = false; // 選完自動收合
       renderResult(piano.getHeldNotes());
     });
 

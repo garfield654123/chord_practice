@@ -173,9 +173,13 @@
 
       <div class="view-content">
 
-        <!-- 調性 -->
-        <div class="setting-group lookup-key-group">
-          <label>調性</label>
+        <!-- 調性（預設折疊） -->
+        <details class="lookup-key-group" id="lookupKeyGroup">
+          <summary class="lookup-key-summary">
+            <span class="lookup-key-summary-label">調性</span>
+            <span class="lookup-key-summary-value" id="lookupKeySummaryValue">C</span>
+            <span class="lookup-key-chevron">▾</span>
+          </summary>
           <div class="key-selector" id="lookupKeySelector">
             <button class="key-btn active" data-key="0">C</button>
             <button class="key-btn" data-key="1">C#/Db</button>
@@ -190,7 +194,7 @@
             <button class="key-btn" data-key="10">A#/Bb</button>
             <button class="key-btn" data-key="11">B</button>
           </div>
-        </div>
+        </details>
 
         <!-- 辨識結果 -->
         <div class="chord-display">
@@ -237,7 +241,6 @@
 
   <script src="js/chord.js"></script>
   <script src="js/audio.js"></script>
-  <script src="js/piano.js"></script>
   <script src="js/notation.js"></script>
   <script src="js/vendor/vexflow-bravura.js"></script>
   <script src="js/staff.js"></script>

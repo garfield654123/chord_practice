@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chord-practice-v17';
+const CACHE_NAME = 'chord-practice-v18';
 const BASE = '/chord_practice';
 const ASSETS = [
   BASE + '/',
@@ -6,7 +6,6 @@ const ASSETS = [
   BASE + '/css/style.css',
   BASE + '/js/app.js',
   BASE + '/js/audio.js',
-  BASE + '/js/piano.js',
   BASE + '/js/chord.js',
   BASE + '/js/notation.js',
   BASE + '/js/staff.js',

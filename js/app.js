@@ -123,11 +123,12 @@ function saveSettings(settings) {
 
     chordGen.setEnabledCategories(state.enabledCategories);
 
-    // 建立鋼琴鍵盤
-    piano = new PianoKeyboard('pianoContainer', {
-      startOctave: 4, octaves: 2,
+    // 建立鋼琴鍵盤（可橫向捲動，跟查詢頁共用同一套元件，只認 pitch class）
+    piano = new PianoWide('pianoContainer', {
+      pitchClassMode: true,
       audio, onNoteClick: onNoteSelected,
     });
+    requestAnimationFrame(() => piano.scrollToMiddleC());
 
     // 建立簡譜面板
     notation = new NotationMode('notationContainer', {
