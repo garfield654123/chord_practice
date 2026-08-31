@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chord-practice-v13';
+const CACHE_NAME = 'chord-practice-v17';
 const BASE = '/chord_practice';
 const ASSETS = [
   BASE + '/',
@@ -9,9 +9,17 @@ const ASSETS = [
   BASE + '/js/piano.js',
   BASE + '/js/chord.js',
   BASE + '/js/notation.js',
+  BASE + '/js/staff.js',
+  BASE + '/js/vendor/vexflow-bravura.js',
+  BASE + '/js/piano-wide.js',
+  BASE + '/js/lookup.js',
+  BASE + '/js/ios-pwa.js',
   BASE + '/manifest.json',
   BASE + '/icons/icon-192.png',
-  BASE + '/icons/icon-512.png'
+  BASE + '/icons/icon-512.png',
+  BASE + '/icons/icon-180.png',
+  BASE + '/icons/icon-152.png',
+  BASE + '/icons/icon-120.png'
 ];
 
 self.addEventListener('install', (event) => {

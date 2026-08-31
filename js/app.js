@@ -59,6 +59,7 @@ function saveSettings(settings) {
   // 模組實例
   const audio    = new PianoAudio();
   const chordGen = new ChordGenerator();
+  const staff    = new StaffNotation('chordStaffDisplay');
   let piano    = null;
   let notation = null;
 
@@ -399,6 +400,7 @@ function saveSettings(settings) {
     const jianpu = chordGen.getJianpuForChord(chord);
     els.chordJianpuDisplay.textContent = `簡譜：${jianpu.join(' - ')}`;
     els.chordJianpuDisplay.style.display = 'none';
+    staff.clear();
 
     // 儲存提示文字（點擊 💡 時顯示）
     state.currentHint = buildHint(chord, key);
@@ -415,6 +417,7 @@ function saveSettings(settings) {
     const selected = Array.isArray(maybeSelected)    ? maybeSelected :
                      Array.isArray(octaveOrSelected)  ? octaveOrSelected : [];
     updateSelectedDisplay(selected);
+    if (!state.answered) staff.renderPreview(selected, state.currentChord, chordGen.currentKey);
   }
 
   function updateSelectedDisplay(selectedNotes) {
@@ -429,6 +432,7 @@ function saveSettings(settings) {
     if (piano)    { piano.clearSelection();    piano.clearHighlights(); }
     if (notation) { notation.clearSelection(); notation.clearHighlights(); }
     updateSelectedDisplay([]);
+    if (!state.answered) staff.clear();
   }
 
   function syncSelection() {
@@ -439,6 +443,7 @@ function saveSettings(settings) {
       active.clearSelection();
       selected.forEach(n => active.selectedNotes.add(n));
       active._updateKeyStates ? active._updateKeyStates() : active._updateStates();
+      if (!state.answered) staff.renderPreview(selected, state.currentChord, chordGen.currentKey);
     }
   }
 
@@ -570,8 +575,9 @@ function saveSettings(settings) {
       activeInput.showWrongNotes(selected, state.currentChord.notes);
     }
 
-    // 顯示簡譜
+    // 顯示簡譜與五線譜
     els.chordJianpuDisplay.style.display = 'block';
+    staff.renderResult(state.currentChord, selected, chordGen.currentKey);
     updateScore();
     els.submitBtn.classList.add('hidden');
     els.nextBtn.classList.remove('hidden');

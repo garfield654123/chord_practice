@@ -8,11 +8,12 @@
   <meta name="apple-mobile-web-app-title" content="和弦練習">
   <meta name="theme-color" content="#1a1a2e">
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192.png">
-  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-192.png">
-  <link rel="apple-touch-icon" sizes="120x120" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="icons/icon-120.png">
   <title>和弦練習</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/ios-pwa.js"></script>
 </head>
 <body>
   <div id="app">
@@ -25,6 +26,12 @@
         <button id="settingsBtn" class="icon-btn" aria-label="設定">⚙️</button>
       </div>
     </header>
+
+    <!-- 頁籤切換 -->
+    <nav class="view-tabs" id="viewTabs">
+      <button class="view-tab active" data-view="practice">🎯 練習</button>
+      <button class="view-tab" data-view="lookup">🔍 和弦查詢</button>
+    </nav>
 
     <!-- 設定面板 -->
     <div id="settingsPanel" class="settings-panel hidden">
@@ -90,7 +97,7 @@
     </div>
 
     <!-- 主練習區 -->
-    <main class="practice-area">
+    <main class="practice-area" id="practiceView">
 
       <!-- 分數列 -->
       <div class="score-bar">
@@ -117,6 +124,7 @@
         <div class="chord-type" id="chordTypeDisplay"></div>
         <div class="chord-extra hidden" id="chordExtraDisplay"></div>
         <div class="chord-jianpu" id="chordJianpuDisplay"></div>
+        <div class="chord-staff hidden" id="chordStaffDisplay"></div>
       </div>
 
       <!-- 回饋訊息 -->
@@ -150,6 +158,53 @@
       </div>
 
     </main>
+
+    <!-- 和弦查詢頁 -->
+    <section class="lookup-area hidden" id="lookupView">
+
+      <!-- 調性 -->
+      <div class="setting-group lookup-key-group">
+        <label>調性</label>
+        <div class="key-selector" id="lookupKeySelector">
+          <button class="key-btn active" data-key="0">C</button>
+          <button class="key-btn" data-key="1">C#/Db</button>
+          <button class="key-btn" data-key="2">D</button>
+          <button class="key-btn" data-key="3">D#/Eb</button>
+          <button class="key-btn" data-key="4">E</button>
+          <button class="key-btn" data-key="5">F</button>
+          <button class="key-btn" data-key="6">F#/Gb</button>
+          <button class="key-btn" data-key="7">G</button>
+          <button class="key-btn" data-key="8">G#/Ab</button>
+          <button class="key-btn" data-key="9">A</button>
+          <button class="key-btn" data-key="10">A#/Bb</button>
+          <button class="key-btn" data-key="11">B</button>
+        </div>
+      </div>
+
+      <!-- 辨識結果 -->
+      <div class="chord-display">
+        <div class="chord-name" id="lookupChordName">--</div>
+        <div class="chord-type" id="lookupNotesText">尚未按任何琴鍵</div>
+        <div class="chord-staff hidden" id="lookupStaffDisplay"></div>
+      </div>
+
+      <!-- 88 鍵可捲動鋼琴 -->
+      <div class="pw-scroll" id="pianoWideScroll">
+        <div id="pianoWideContainer"></div>
+      </div>
+
+      <div class="action-buttons" style="margin-top:10px">
+        <button id="lookupClearBtn"  class="action-btn secondary-btn">清除</button>
+        <button id="lookupCenterBtn" class="action-btn secondary-btn">回到中央 C4</button>
+      </div>
+
+    </section>
+  </div>
+
+  <!-- iOS「加入主畫面」引導（iOS Safari 沒有原生安裝提示，需手動引導） -->
+  <div id="iosInstallBanner" class="ios-install-banner hidden">
+    <span class="ios-install-text">📲 點下方「分享」按鈕 <strong>⬆️</strong>，再選「加入主畫面」即可安裝成 App</span>
+    <button id="iosInstallDismiss" class="ios-install-dismiss" aria-label="關閉">✕</button>
   </div>
 
   <!-- 提示彈窗 -->
@@ -167,6 +222,10 @@
   <script src="js/audio.js"></script>
   <script src="js/piano.js"></script>
   <script src="js/notation.js"></script>
+  <script src="js/vendor/vexflow-bravura.js"></script>
+  <script src="js/staff.js"></script>
+  <script src="js/piano-wide.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/lookup.js"></script>
 </body>
 </html>

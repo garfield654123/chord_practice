@@ -66,6 +66,37 @@ const BORROWED_CHORD_PATTERNS = [
 
 const INVERSION_NAMES = ['根音位置', '第一轉位', '第二轉位', '第三轉位'];
 
+// ── 和弦符號文字（root + type → 顯示字串，例如 0,'min7' → 'Cmin7'）───
+function getChordSymbol(root, type) {
+  const rootName = NOTE_NAMES[root];
+  const suffix   = type === 'maj' ? '' : type === 'min' ? 'm' : type;
+  return rootName + suffix;
+}
+
+// ── 和弦反查：給一組 pitch class，判斷符合 CHORD_TYPES 裡哪個（root, type）
+// 對稱和弦（如 dim7、aug）或關係和弦（如 C6 / Am7 音高相同）可能有多組解，
+// 優先選 root 等於低音（bassPc）的那組，較符合實際聽感／彈奏意圖
+function identifyChord(pitchClasses, bassPc) {
+  const pcSet = new Set(pitchClasses);
+  if (pcSet.size < 3) return null; // CHORD_TYPES 目前最少是三和弦
+
+  const matches = [];
+  for (let root = 0; root < 12; root++) {
+    const relative = new Set([...pcSet].map(pc => (pc - root + 12) % 12));
+    for (const [type, info] of Object.entries(CHORD_TYPES)) {
+      const typeSet = info.intervals;
+      if (typeSet.length !== relative.size) continue;
+      if (typeSet.every(v => relative.has(v))) matches.push({ root, type });
+    }
+  }
+  if (matches.length === 0) return null;
+  if (bassPc != null) {
+    const bassMatch = matches.find(m => m.root === bassPc);
+    if (bassMatch) return bassMatch;
+  }
+  return matches.slice().sort((a, b) => a.root - b.root)[0];
+}
+
 // ── ChordGenerator ────────────────────────────────────
 class ChordGenerator {
   constructor() {
@@ -179,9 +210,7 @@ class ChordGenerator {
   }
 
   _getChordName(root, type) {
-    const rootName = NOTE_NAMES[root];
-    const suffix   = type === 'maj' ? '' : type === 'min' ? 'm' : type;
-    return rootName + suffix;
+    return getChordSymbol(root, type);
   }
 
   checkAnswer(correctChord, selectedNotes) {
@@ -246,3 +275,5 @@ window.BORROWED_CHORD_PATTERNS = BORROWED_CHORD_PATTERNS;
 window.CHORD_HINTS             = CHORD_HINTS;
 window.DEGREE_NAMES            = DEGREE_NAMES;
 window.getIntervalFormula      = getIntervalFormula;
+window.getChordSymbol          = getChordSymbol;
+window.identifyChord           = identifyChord;
