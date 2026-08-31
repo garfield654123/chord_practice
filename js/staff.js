@@ -133,6 +133,28 @@ class StaffNotation {
     this._draw(notes, keyIndex, { label, colorMap });
   }
 
+  // 「和弦知識」頁用：純展示單一和弦的音符，不比對答案、不套用調性脈絡——
+  // 一律不畫調號、直接在音符上顯示升降記號，符合一般和弦字典的慣例。
+  // 可選擇性帶入 bassPc 示範轉位／複合和弦的斜線記法（例如 Cmaj7/E）
+  renderReference(chord, { bassPc = null } = {}) {
+    if (!chord) { this.clear(); return; }
+    const isSlash        = bassPc != null && bassPc !== chord.root;
+    const bassIsChordTone = isSlash && chord.notes.includes(bassPc);
+    const pcs = isSlash && !bassIsChordTone ? [...chord.notes, bassPc] : chord.notes;
+
+    let notes = this._buildNotes(pcs, chord, 0); // keyIndex 0 = C，不畫調號
+
+    if (isSlash) {
+      // 把低音移到整組和弦最下方（低一個八度），符合斜線和弦「低音在最下面」的慣例
+      notes = notes
+        .map(n => (n.pc === bassPc ? { ...n, octave: n.octave - 1 } : n))
+        .sort((a, b) => (a.octave * 12 + a.pc) - (b.octave * 12 + b.pc));
+    }
+
+    const label = isSlash ? `${chord.name}/${NOTE_NAMES[bassPc]}` : chord.name;
+    this._draw(notes, 0, { label, colorMap: null });
+  }
+
   // ── 內部：音符資料組裝 ──────────────────────────────────
   _buildNotes(pcs, chord, keyIndex) {
     const flats    = useFlatSpelling(keyIndex);

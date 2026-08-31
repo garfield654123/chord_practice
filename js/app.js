@@ -92,7 +92,7 @@ function saveSettings(settings) {
     wrongCount:       $('#wrongCount'),
     streakCount:      $('#streakCount'),
     selectedNotesText:$('#selectedNotesText'),
-    pianoContainer:   $('#pianoContainer'),
+    pianoScroll:      $('#pianoScroll'),
     notationContainer:$('#notationContainer'),
     clearBtn:         $('#clearBtn'),
     playSelectedBtn:  $('#playSelectedBtn'),
@@ -159,7 +159,7 @@ function saveSettings(settings) {
       els.notationModeBtn.classList.add('active');
       els.pianoModeBtn.classList.remove('active');
       els.notationContainer.classList.remove('hidden');
-      els.pianoContainer.classList.add('hidden');
+      els.pianoScroll.classList.add('hidden');
     }
     // 聽和弦方式
     if (saved.listenMode === 'chord') {
@@ -310,7 +310,7 @@ function saveSettings(settings) {
       state.inputMode = 'piano';
       els.pianoModeBtn.classList.add('active');
       els.notationModeBtn.classList.remove('active');
-      els.pianoContainer.classList.remove('hidden');
+      els.pianoScroll.classList.remove('hidden');
       els.notationContainer.classList.add('hidden');
       syncSelection();
       persistSettings();
@@ -320,7 +320,7 @@ function saveSettings(settings) {
       els.notationModeBtn.classList.add('active');
       els.pianoModeBtn.classList.remove('active');
       els.notationContainer.classList.remove('hidden');
-      els.pianoContainer.classList.add('hidden');
+      els.pianoScroll.classList.add('hidden');
       syncSelection();
       persistSettings();
     });

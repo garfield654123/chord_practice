@@ -20,17 +20,34 @@
 
     <!-- 頂部標題列 -->
     <header class="app-header">
-      <h1>🎹 和弦練習</h1>
+      <div class="header-left">
+        <button id="sidebarToggle" class="icon-btn" aria-label="選單">☰</button>
+        <h1>🎹 和弦練習</h1>
+      </div>
       <div class="header-actions">
         <button id="refreshBtn"  class="icon-btn" aria-label="換一題">🔄</button>
         <button id="settingsBtn" class="icon-btn" aria-label="設定">⚙️</button>
       </div>
     </header>
 
-    <!-- 頁籤切換 -->
-    <nav class="view-tabs" id="viewTabs">
-      <button class="view-tab active" data-view="practice">🎯 練習</button>
-      <button class="view-tab" data-view="lookup">🔍 和弦查詢</button>
+    <!-- 側邊欄遮罩 -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- 側邊欄導覽（練習／查詢／知識三個獨立頁面） -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">🎹 和弦練習</span>
+        <button id="sidebarClose" class="icon-btn" aria-label="關閉選單">✕</button>
+      </div>
+      <button class="sidebar-item active" data-view="practice">
+        <span class="sidebar-item-icon">🎯</span><span>練習</span>
+      </button>
+      <button class="sidebar-item" data-view="lookup">
+        <span class="sidebar-item-icon">🔍</span><span>和弦查詢</span>
+      </button>
+      <button class="sidebar-item" data-view="knowledge">
+        <span class="sidebar-item-icon">📖</span><span>和弦知識</span>
+      </button>
     </nav>
 
     <!-- 設定面板 -->
@@ -158,10 +175,12 @@
 
       </div>
 
-      <!-- 鍵盤固定區（滿版、貼底） -->
+      <!-- 鍵盤固定區（滿版、貼底，跟查詢頁的 88 鍵鋼琴同一套結構） -->
       <div class="keyboard-tray">
-        <!-- 鋼琴鍵盤 -->
-        <div id="pianoContainer" class="input-container"></div>
+        <!-- 鋼琴鍵盤（可橫向捲動） -->
+        <div class="pw-scroll" id="pianoScroll">
+          <div id="pianoContainer"></div>
+        </div>
         <!-- 簡譜 -->
         <div id="notationContainer" class="input-container hidden"></div>
       </div>
@@ -219,6 +238,76 @@
 
     </section>
 
+    <!-- 和弦知識頁 -->
+    <section class="knowledge-area view-page hidden" id="knowledgeView">
+
+      <div class="view-content">
+
+        <!-- 簡介 -->
+        <div class="knowledge-intro">
+          <h2>怎麼讀和弦符號？</h2>
+          <p>順序是：<strong>根音</strong> →
+            <strong>性質</strong>（大 / 小 / 屬 / 減 / 增）→
+            <strong>延伸音</strong>（7、9、11…）→
+            <strong>低音</strong>（斜線和弦）。<br>
+            例如 <code>Cm7/G</code> ＝ 根音 C、小七和弦、低音改成 G。</p>
+        </div>
+
+        <!-- 範例卡（會隨下方選擇即時更新） -->
+        <div class="chord-display" id="knowledgeCard">
+          <div class="chord-name" id="knowledgeSymbol">--</div>
+          <div class="chord-type" id="knowledgeName"></div>
+          <div class="knowledge-formula" id="knowledgeFormula"></div>
+          <div class="knowledge-desc" id="knowledgeDesc"></div>
+          <div class="chord-staff" id="knowledgeStaffDisplay"></div>
+        </div>
+
+        <!-- 根音 -->
+        <div class="setting-group">
+          <label>根音</label>
+          <div class="key-selector" id="knowledgeRootSelector">
+            <button class="key-btn active" data-key="0">C</button>
+            <button class="key-btn" data-key="1">C#/Db</button>
+            <button class="key-btn" data-key="2">D</button>
+            <button class="key-btn" data-key="3">D#/Eb</button>
+            <button class="key-btn" data-key="4">E</button>
+            <button class="key-btn" data-key="5">F</button>
+            <button class="key-btn" data-key="6">F#/Gb</button>
+            <button class="key-btn" data-key="7">G</button>
+            <button class="key-btn" data-key="8">G#/Ab</button>
+            <button class="key-btn" data-key="9">A</button>
+            <button class="key-btn" data-key="10">A#/Bb</button>
+            <button class="key-btn" data-key="11">B</button>
+          </div>
+        </div>
+
+        <!-- 低音（選填，示範轉位／複合和弦） -->
+        <div class="setting-group">
+          <label>低音 <span class="label-hint">（選填，示範轉位／複合和弦，如 C/E）</span></label>
+          <select id="knowledgeBassSelect" class="knowledge-bass-select">
+            <option value="" selected>原位（不變）</option>
+            <option value="0">C</option>
+            <option value="1">C#/Db</option>
+            <option value="2">D</option>
+            <option value="3">D#/Eb</option>
+            <option value="4">E</option>
+            <option value="5">F</option>
+            <option value="6">F#/Gb</option>
+            <option value="7">G</option>
+            <option value="8">G#/Ab</option>
+            <option value="9">A</option>
+            <option value="10">A#/Bb</option>
+            <option value="11">B</option>
+          </select>
+        </div>
+
+        <!-- 和弦符號分類清單 -->
+        <div class="knowledge-groups" id="knowledgeGroups"></div>
+
+      </div>
+
+    </section>
+
     </div>
   </div>
 
@@ -245,7 +334,9 @@
   <script src="js/vendor/vexflow-bravura.js"></script>
   <script src="js/staff.js"></script>
   <script src="js/piano-wide.js"></script>
+  <script src="js/tabs.js"></script>
   <script src="js/app.js"></script>
   <script src="js/lookup.js"></script>
+  <script src="js/knowledge.js"></script>
 </body>
 </html>
