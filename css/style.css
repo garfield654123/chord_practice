@@ -39,7 +39,12 @@
 /* ── Reset ──────────────────────────────────────────── */
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
-html, body { height:100%; overflow:hidden; }
+html, body {
+  height: 100%;        /* 舊瀏覽器後援 */
+  height: 100svh;      /* 用「最小視口高度」取代 100vh，Safari 網址列收合/展開時畫面才不會跳動 */
+  overflow: hidden;
+  overscroll-behavior: none; /* 避免下拉回彈把整個 App 版面撐開/彈動 */
+}
 
 /* ── Body 背景 ──────────────────────────────────────── */
 body {
@@ -49,6 +54,9 @@ body {
   color: var(--text-primary);
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none; /* 長按不跳出「拷貝／查詢」選單，減少網頁感 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   touch-action: manipulation;
   position: relative;
 }
@@ -102,8 +110,12 @@ body::before {
   border: none;
   font-size: 22px;
   cursor: pointer;
-  padding: 6px;
-  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 12px;
   transition: background 0.15s;
 }
 .icon-btn:active { background: rgba(124,58,237,0.1); }
@@ -134,8 +146,10 @@ body::before {
   padding: 24px 20px;
   width: 100%;
   max-width: 420px;
-  max-height: 87vh;
+  max-height: 87vh;    /* 舊瀏覽器後援 */
+  max-height: 87svh;   /* 視口高度變動時不跳動 */
   overflow-y: auto;
+  overscroll-behavior: contain;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.14), 0 2px 0 rgba(255,255,255,0.9) inset;
 }
 
@@ -340,14 +354,39 @@ body::before {
 .reset-btn:active { background: rgba(220,38,38,0.14); }
 
 /* ── Practice Area ──────────────────────────────────── */
+/* .practice-area 本身只負責上下排列「內容區」跟「鍵盤固定區」，
+   實際的內距/捲動交給 .view-content；鍵盤固定區才能真正貼底滿版 */
 .practice-area {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: hidden;
-  overflow-x: clip; /* 裁切視覺但不阻斷子元件的 scroll context */
-  padding: 10px 12px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── 內容區（可捲動，維持左右內距） ──────────────────── */
+.view-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+  overflow-y: auto;
+  overflow-x: clip;
+  overscroll-behavior: contain;
+  padding: 10px 12px;
+}
+
+/* ── 鍵盤固定區（貼底、滿版、不隨內容區捲動） ──────────── */
+.keyboard-tray {
+  flex-shrink: 0;
+  width: 100%;
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter:         blur(20px) saturate(180%);
+  border-top: 1px solid var(--glass-border);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+  padding: 6px 0;
 }
 
 /* ── Score Bar ──────────────────────────────────────── */
@@ -425,16 +464,35 @@ body::before {
   box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.40);
 }
 
-/* ── 和弦查詢頁 ──────────────────────────────────────── */
-.lookup-area {
+/* ── 頁籤內容切換（左右滑動過渡） ─────────────────────── */
+.view-stack {
   flex: 1;
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+.view-page {
+  position: absolute;
+  inset: 0;
+}
+/* 切換動畫進行中由 lookup.js 用 inline style 控制 transform/opacity，
+   這裡只提供 transition 時間曲線；平常靜止時不留 transition，避免影響其他互動 */
+.view-page.view-transitioning {
+  /* transform/opacity 用相同時長，transitionend 才會同時觸發，收尾才不會卡一下 */
+  transition: transform 0.28s cubic-bezier(.25,.8,.25,1), opacity 0.28s ease;
+}
+
+/* ── 和弦查詢頁 ──────────────────────────────────────── */
+/* .lookup-area 跟 .practice-area 用同一套「內容區 + 鍵盤固定區」版型，
+   內距/捲動已經在共用的 .view-content / .keyboard-tray 裡處理 */
+.lookup-area {
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  padding: 10px 12px;
-  gap: 12px;
+  min-height: 0;
+  overflow: hidden;
 }
 .lookup-area.hidden { display: none; }
+.lookup-area .view-content { gap: 12px; }
 .lookup-key-group { margin-bottom: 0; }
 
 .pw-scroll {
@@ -442,7 +500,9 @@ body::before {
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  padding: 4px 0 10px;
+  overscroll-behavior: contain;
+  touch-action: pan-x; /* 限制只能水平滑動，避免跟垂直捲動搶手勢、卡頓 */
+  padding: 4px 0;
 }
 .pw-keys {
   display: flex;
@@ -457,7 +517,8 @@ body::before {
 }
 .pw-white {
   width: 30px;
-  height: clamp(90px, 15vh, 130px);
+  height: clamp(90px, 15vh, 130px);   /* 舊瀏覽器後援 */
+  height: clamp(90px, 15svh, 130px);  /* 視口高度變動時鍵盤不會跳動 */
   background: var(--white-key);
   border: 1px solid rgba(180,160,220,0.30);
   border-radius: 0 0 6px 6px;
@@ -470,7 +531,8 @@ body::before {
 
 .pw-black {
   width: 18px;
-  height: clamp(56px, 9vh, 80px);
+  height: clamp(56px, 9vh, 80px);   /* 舊瀏覽器後援 */
+  height: clamp(56px, 9svh, 80px); /* 視口高度變動時鍵盤不會跳動 */
   background: linear-gradient(180deg, #2d1b4e 0%, #160d2e 100%);
   border: 1px solid rgba(50,30,80,0.6);
   border-radius: 0 0 4px 4px;
@@ -539,8 +601,11 @@ body::before {
   background: rgba(255,255,255,0.12);
   border: none;
   color: #fff;
-  width: 26px;
-  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   font-size: 13px;
   cursor: pointer;
@@ -568,14 +633,18 @@ body::before {
 /* 提示切換按鈕（右上角） */
 .hint-toggle-btn {
   position: absolute;
-  top: 8px;
-  right: 10px;
+  top: 2px;
+  right: 4px;
   background: none;
   border: none;
   font-size: 17px;
   cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 10px;
   opacity: 0.45;
   transition: opacity 0.15s, background 0.15s;
   line-height: 1;
@@ -635,8 +704,12 @@ body::before {
   font-size: 14px;
   cursor: pointer;
   color: var(--text-secondary);
-  padding: 5px 10px;
-  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 12px;
   font-weight: 600;
   transition: background 0.15s;
 }
@@ -652,7 +725,7 @@ body::before {
 /* 分類徽章：顏色由 JS 設定 */
 .category-badge {
   display: inline-block;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   padding: 3px 14px;
   border-radius: 20px;
@@ -671,7 +744,7 @@ body::before {
 }
 
 .chord-name {
-  font-size: 42px;
+  font-size: 38px;
   font-weight: 900;
   letter-spacing: -1px;
   color: var(--accent);
@@ -687,7 +760,7 @@ body::before {
 }
 
 .chord-extra {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--warning);
   margin-top: 3px;
@@ -706,10 +779,17 @@ body::before {
 /* ── 五線譜（VexFlow 引擎繪製） ───────────────────────── */
 .chord-staff {
   margin-top: 10px;
+  min-height: 100px; /* 固定預留高度，避免五線譜出現/消失、或音符變化導致版面跳動 */
   display: flex;
   justify-content: center;
+  align-items: center;
 }
-.chord-staff.hidden { display: none; }
+/* 用 visibility 取代 display:none，保留版面空間避免跳動；
+   要蓋過全域 .hidden{display:none!important}，用更高特異性 + !important */
+.chord-staff.hidden {
+  display: flex !important;
+  visibility: hidden !important;
+}
 
 .chord-staff .staff-svg {
   width: 100%;
@@ -775,16 +855,17 @@ body::before {
 .selected-label { color: var(--text-secondary); font-weight: 500; }
 .selected-notes { color: var(--accent); font-weight: 700; }
 
-/* ── Input Container ────────────────────────────────── */
+/* ── Input Container（放在 .keyboard-tray 貼底鍵盤固定區裡） ─ */
 .input-container {
-  flex: 1;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: flex-start; /* 讓內容從左對齊，配合水平滾動 */
-  min-height: 0;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-x; /* 限制只能水平滑動，避免跟頁面捲動搶手勢、卡頓 */
   scrollbar-width: none; /* Firefox */
 }
 .input-container::-webkit-scrollbar { display: none; } /* Chrome/Safari */
@@ -839,7 +920,8 @@ body::before {
 /* ── 白鍵（每排 7 鍵，尺寸加大） ──────────────────────── */
 .white-key {
   width: 44px;
-  height: clamp(110px, 18vh, 165px);
+  height: clamp(110px, 18vh, 165px);   /* 舊瀏覽器後援 */
+  height: clamp(110px, 18svh, 165px); /* 視口高度變動時鍵盤不會跳動 */
   background: var(--white-key);
   border: 1px solid rgba(180,160,220,0.30);
   border-radius: 0 0 10px 10px;
@@ -854,7 +936,8 @@ body::before {
 /* ── 黑鍵 ──────────────────────────────────────────────── */
 .black-key {
   width: 28px;
-  height: clamp(68px, 11vh, 103px);
+  height: clamp(68px, 11vh, 103px);   /* 舊瀏覽器後援 */
+  height: clamp(68px, 11svh, 103px); /* 視口高度變動時鍵盤不會跳動 */
   background: linear-gradient(180deg, #2d1b4e 0%, #160d2e 100%);
   border: 1px solid rgba(50,30,80,0.6);
   border-radius: 0 0 7px 7px;
@@ -1155,9 +1238,9 @@ body::before {
 
 /* 中等高度（iPhone SE 直式）：壓縮上方元件騰出鍵盤空間 */
 @media (max-height: 720px) {
-  .practice-area   { gap: 6px; padding: 8px 12px; }
+  .view-content    { gap: 6px; padding: 8px 12px; }
   .chord-display   { padding: 10px 14px; }
-  .chord-name      { font-size: 36px; }
+  .chord-name      { font-size: 32px; }
   .score-bar       { padding: 4px; }
   .primary-btn     { padding: 13px; }
   .secondary-btn   { padding: 10px 14px; }
@@ -1166,7 +1249,7 @@ body::before {
 /* 矮螢幕 / 橫式 */
 @media (max-height: 600px) {
   .chord-display { padding: 6px 12px; }
-  .chord-name    { font-size: 28px; }
+  .chord-name    { font-size: 26px; }
   .piano-keyboard { gap: 6px; }
   /* 白鍵高度已用 clamp() 自動縮小，只需縮小寬度 */
   .white-key     { width: 36px; }

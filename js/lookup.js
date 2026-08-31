@@ -5,22 +5,57 @@
 
   const $ = (sel) => document.querySelector(sel);
 
-  // ========== 頁籤切換 ==========
+  // ========== 頁籤切換（左右滑動過渡） ==========
   const tabs = document.querySelectorAll('.view-tab');
   const views = {
     practice: $('#practiceView'),
     lookup:   $('#lookupView'),
   };
+  const VIEW_ORDER = ['practice', 'lookup'];
+  let currentView = 'practice';
+
+  function switchView(target) {
+    if (target === currentView || !views[target] || !views[currentView]) return;
+
+    const fromEl = views[currentView];
+    const toEl   = views[target];
+    const dir    = VIEW_ORDER.indexOf(target) > VIEW_ORDER.indexOf(currentView) ? 1 : -1;
+
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.view === target));
+    currentView = target;
+
+    // 進場前：先移出畫面外、不套用 transition，避免出現閃一下的位移
+    toEl.classList.remove('hidden');
+    toEl.classList.remove('view-transitioning');
+    toEl.style.transform = `translateX(${dir * 100}%)`;
+    toEl.style.opacity = '0';
+    void toEl.offsetWidth; // 強制 reflow，讓上面這行先生效
+
+    requestAnimationFrame(() => {
+      fromEl.classList.add('view-transitioning');
+      toEl.classList.add('view-transitioning');
+      fromEl.style.transform = `translateX(${-dir * 100}%)`;
+      fromEl.style.opacity = '0';
+      toEl.style.transform = 'translateX(0)';
+      toEl.style.opacity = '1';
+    });
+
+    const cleanup = () => {
+      fromEl.classList.add('hidden');
+      [fromEl, toEl].forEach(el => {
+        el.classList.remove('view-transitioning');
+        el.style.transform = '';
+        el.style.opacity = '';
+      });
+      fromEl.removeEventListener('transitionend', cleanup);
+    };
+    fromEl.addEventListener('transitionend', cleanup);
+
+    if (target === 'lookup') onLookupShown();
+  }
 
   tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const target = tab.dataset.view;
-      tabs.forEach(t => t.classList.toggle('active', t === tab));
-      Object.entries(views).forEach(([name, el]) => {
-        if (el) el.classList.toggle('hidden', name !== target);
-      });
-      if (target === 'lookup') onLookupShown();
-    });
+    tab.addEventListener('click', () => switchView(tab.dataset.view));
   });
 
   // ========== 和弦查詢頁邏輯 ==========

@@ -96,109 +96,126 @@
       </div>
     </div>
 
+    <!-- 頁籤內容（左右滑動切換） -->
+    <div class="view-stack" id="viewStack">
+
     <!-- 主練習區 -->
-    <main class="practice-area" id="practiceView">
+    <main class="practice-area view-page" id="practiceView">
 
-      <!-- 分數列 -->
-      <div class="score-bar">
-        <div class="score-item">
-          <span class="score-label">正確</span>
-          <span class="score-value" id="correctCount">0</span>
+      <div class="view-content">
+
+        <!-- 分數列 -->
+        <div class="score-bar">
+          <div class="score-item">
+            <span class="score-label">正確</span>
+            <span class="score-value" id="correctCount">0</span>
+          </div>
+          <div class="score-item">
+            <span class="score-label">錯誤</span>
+            <span class="score-value" id="wrongCount">0</span>
+          </div>
+          <div class="score-item">
+            <span class="score-label">連續</span>
+            <span class="score-value" id="streakCount">0</span>
+          </div>
         </div>
-        <div class="score-item">
-          <span class="score-label">錯誤</span>
-          <span class="score-value" id="wrongCount">0</span>
+
+        <!-- 題目顯示 -->
+        <div class="chord-display">
+          <button id="hintToggleBtn" class="hint-toggle-btn" aria-label="提示">💡</button>
+          <div class="category-badge" id="categoryBadge">三和弦</div>
+          <div class="current-key" id="currentKeyDisplay">Key: C</div>
+          <div class="chord-name" id="chordNameDisplay">--</div>
+          <div class="chord-type" id="chordTypeDisplay"></div>
+          <div class="chord-extra hidden" id="chordExtraDisplay"></div>
+          <div class="chord-jianpu" id="chordJianpuDisplay"></div>
+          <div class="chord-staff hidden" id="chordStaffDisplay"></div>
         </div>
-        <div class="score-item">
-          <span class="score-label">連續</span>
-          <span class="score-value" id="streakCount">0</span>
+
+        <!-- 回饋訊息 -->
+        <div class="feedback hidden" id="feedback">
+          <div class="feedback-icon" id="feedbackIcon"></div>
+          <div class="feedback-text" id="feedbackText"></div>
+          <div class="feedback-detail" id="feedbackDetail"></div>
         </div>
+
+        <!-- 已選音符 -->
+        <div class="selected-display" id="selectedDisplay">
+          <span class="selected-label">已選：</span>
+          <span class="selected-notes" id="selectedNotesText">尚未選擇</span>
+        </div>
+
+        <!-- 操作按鈕 -->
+        <div class="action-buttons">
+          <button id="clearBtn"        class="action-btn secondary-btn">清除</button>
+          <button id="playSelectedBtn" class="action-btn secondary-btn">🎵 試聽</button>
+          <button id="listenBtn"       class="action-btn secondary-btn">🔊 聽題</button>
+        </div>
+        <div class="action-buttons" style="margin-top:8px">
+          <button id="submitBtn" class="action-btn primary-btn full-width">送出答案</button>
+          <button id="nextBtn"   class="action-btn primary-btn full-width hidden">下一題 →</button>
+        </div>
+
       </div>
 
-      <!-- 題目顯示 -->
-      <div class="chord-display">
-        <button id="hintToggleBtn" class="hint-toggle-btn" aria-label="提示">💡</button>
-        <div class="category-badge" id="categoryBadge">三和弦</div>
-        <div class="current-key" id="currentKeyDisplay">Key: C</div>
-        <div class="chord-name" id="chordNameDisplay">--</div>
-        <div class="chord-type" id="chordTypeDisplay"></div>
-        <div class="chord-extra hidden" id="chordExtraDisplay"></div>
-        <div class="chord-jianpu" id="chordJianpuDisplay"></div>
-        <div class="chord-staff hidden" id="chordStaffDisplay"></div>
-      </div>
-
-      <!-- 回饋訊息 -->
-      <div class="feedback hidden" id="feedback">
-        <div class="feedback-icon" id="feedbackIcon"></div>
-        <div class="feedback-text" id="feedbackText"></div>
-        <div class="feedback-detail" id="feedbackDetail"></div>
-      </div>
-
-      <!-- 已選音符 -->
-      <div class="selected-display" id="selectedDisplay">
-        <span class="selected-label">已選：</span>
-        <span class="selected-notes" id="selectedNotesText">尚未選擇</span>
-      </div>
-
-      <!-- 鋼琴鍵盤 -->
-      <div id="pianoContainer" class="input-container"></div>
-
-      <!-- 簡譜 -->
-      <div id="notationContainer" class="input-container hidden"></div>
-
-      <!-- 操作按鈕 -->
-      <div class="action-buttons">
-        <button id="clearBtn"        class="action-btn secondary-btn">清除</button>
-        <button id="playSelectedBtn" class="action-btn secondary-btn">🎵 試聽</button>
-        <button id="listenBtn"       class="action-btn secondary-btn">🔊 聽題</button>
-      </div>
-      <div class="action-buttons" style="margin-top:8px">
-        <button id="submitBtn" class="action-btn primary-btn full-width">送出答案</button>
-        <button id="nextBtn"   class="action-btn primary-btn full-width hidden">下一題 →</button>
+      <!-- 鍵盤固定區（滿版、貼底） -->
+      <div class="keyboard-tray">
+        <!-- 鋼琴鍵盤 -->
+        <div id="pianoContainer" class="input-container"></div>
+        <!-- 簡譜 -->
+        <div id="notationContainer" class="input-container hidden"></div>
       </div>
 
     </main>
 
     <!-- 和弦查詢頁 -->
-    <section class="lookup-area hidden" id="lookupView">
+    <section class="lookup-area view-page hidden" id="lookupView">
 
-      <!-- 調性 -->
-      <div class="setting-group lookup-key-group">
-        <label>調性</label>
-        <div class="key-selector" id="lookupKeySelector">
-          <button class="key-btn active" data-key="0">C</button>
-          <button class="key-btn" data-key="1">C#/Db</button>
-          <button class="key-btn" data-key="2">D</button>
-          <button class="key-btn" data-key="3">D#/Eb</button>
-          <button class="key-btn" data-key="4">E</button>
-          <button class="key-btn" data-key="5">F</button>
-          <button class="key-btn" data-key="6">F#/Gb</button>
-          <button class="key-btn" data-key="7">G</button>
-          <button class="key-btn" data-key="8">G#/Ab</button>
-          <button class="key-btn" data-key="9">A</button>
-          <button class="key-btn" data-key="10">A#/Bb</button>
-          <button class="key-btn" data-key="11">B</button>
+      <div class="view-content">
+
+        <!-- 調性 -->
+        <div class="setting-group lookup-key-group">
+          <label>調性</label>
+          <div class="key-selector" id="lookupKeySelector">
+            <button class="key-btn active" data-key="0">C</button>
+            <button class="key-btn" data-key="1">C#/Db</button>
+            <button class="key-btn" data-key="2">D</button>
+            <button class="key-btn" data-key="3">D#/Eb</button>
+            <button class="key-btn" data-key="4">E</button>
+            <button class="key-btn" data-key="5">F</button>
+            <button class="key-btn" data-key="6">F#/Gb</button>
+            <button class="key-btn" data-key="7">G</button>
+            <button class="key-btn" data-key="8">G#/Ab</button>
+            <button class="key-btn" data-key="9">A</button>
+            <button class="key-btn" data-key="10">A#/Bb</button>
+            <button class="key-btn" data-key="11">B</button>
+          </div>
+        </div>
+
+        <!-- 辨識結果 -->
+        <div class="chord-display">
+          <div class="chord-name" id="lookupChordName">--</div>
+          <div class="chord-type" id="lookupNotesText">尚未按任何琴鍵</div>
+          <div class="chord-staff hidden" id="lookupStaffDisplay"></div>
+        </div>
+
+        <div class="action-buttons" style="margin-top:10px">
+          <button id="lookupClearBtn"  class="action-btn secondary-btn">清除</button>
+          <button id="lookupCenterBtn" class="action-btn secondary-btn">回到中央 C4</button>
+        </div>
+
+      </div>
+
+      <!-- 鍵盤固定區（滿版、貼底） -->
+      <div class="keyboard-tray">
+        <div class="pw-scroll" id="pianoWideScroll">
+          <div id="pianoWideContainer"></div>
         </div>
       </div>
 
-      <!-- 辨識結果 -->
-      <div class="chord-display">
-        <div class="chord-name" id="lookupChordName">--</div>
-        <div class="chord-type" id="lookupNotesText">尚未按任何琴鍵</div>
-        <div class="chord-staff hidden" id="lookupStaffDisplay"></div>
-      </div>
-
-      <!-- 88 鍵可捲動鋼琴 -->
-      <div class="pw-scroll" id="pianoWideScroll">
-        <div id="pianoWideContainer"></div>
-      </div>
-
-      <div class="action-buttons" style="margin-top:10px">
-        <button id="lookupClearBtn"  class="action-btn secondary-btn">清除</button>
-        <button id="lookupCenterBtn" class="action-btn secondary-btn">回到中央 C4</button>
-      </div>
-
     </section>
+
+    </div>
   </div>
 
   <!-- iOS「加入主畫面」引導（iOS Safari 沒有原生安裝提示，需手動引導） -->
