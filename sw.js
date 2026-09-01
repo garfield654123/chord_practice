@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chord-practice-v20';
+const CACHE_NAME = 'chord-practice-v23';
 const BASE = '/chord_practice';
 const ASSETS = [
   BASE + '/',
@@ -12,6 +12,7 @@ const ASSETS = [
   BASE + '/js/vendor/vexflow-bravura.js',
   BASE + '/js/piano-wide.js',
   BASE + '/js/tabs.js',
+  BASE + '/js/layout.js',
   BASE + '/js/lookup.js',
   BASE + '/js/knowledge.js',
   BASE + '/js/ios-pwa.js',

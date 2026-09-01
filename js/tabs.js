@@ -1,6 +1,7 @@
-// tabs.js - 側邊欄導覽（練習／查詢／知識，左右滑動過渡）
+// tabs.js - 主導覽（練習／查詢／知識，左右滑動過渡）
 // 通用寫法：讀 .sidebar-item 的 data-view，對應 #<data-view>View 的元素，
 // 以後要加新頁面只要照這個命名規則加 HTML，這支不用改。
+// 導覽本身一律可見（手機是貼底分頁列，桌面是左側常駐欄），不需要開關邏輯。
 
 (function () {
   'use strict';
@@ -58,30 +59,8 @@
     if (shownListeners[target]) shownListeners[target]();
   }
 
-  // ========== 側邊欄開關 ==========
-  const sidebar     = document.getElementById('sidebar');
-  const overlay     = document.getElementById('sidebarOverlay');
-  const toggleBtn   = document.getElementById('sidebarToggle');
-  const closeBtn    = document.getElementById('sidebarClose');
-
-  function openSidebar() {
-    if (sidebar)  sidebar.classList.add('open');
-    if (overlay)  overlay.classList.add('open');
-  }
-  function closeSidebar() {
-    if (sidebar)  sidebar.classList.remove('open');
-    if (overlay)  overlay.classList.remove('open');
-  }
-
-  if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
-  if (closeBtn)  closeBtn.addEventListener('click', closeSidebar);
-  if (overlay)   overlay.addEventListener('click', closeSidebar);
-
   navItems.forEach(item => {
-    item.addEventListener('click', () => {
-      switchView(item.dataset.view);
-      closeSidebar();
-    });
+    item.addEventListener('click', () => switchView(item.dataset.view));
   });
 
   // 供其他模組註冊「切到某頁面時要做的事」（例如查詢頁要捲到中央 C）

@@ -14,30 +14,28 @@
   <title>和弦練習</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="js/ios-pwa.js"></script>
+  <script src="js/layout.js"></script>
 </head>
 <body>
   <div id="app">
 
-    <!-- 頂部標題列 -->
+    <!-- 頂部標題列（所有頁面共用） -->
     <header class="app-header">
       <div class="header-left">
-        <button id="sidebarToggle" class="icon-btn" aria-label="選單">☰</button>
         <h1>🎹 和弦練習</h1>
       </div>
       <div class="header-actions">
+        <button id="layoutToggleBtn" class="icon-btn" aria-label="切換電腦/手機版面">🖥️</button>
         <button id="refreshBtn"  class="icon-btn" aria-label="換一題">🔄</button>
         <button id="settingsBtn" class="icon-btn" aria-label="設定">⚙️</button>
       </div>
     </header>
 
-    <!-- 側邊欄遮罩 -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- 側邊欄導覽（練習／查詢／知識三個獨立頁面） -->
+    <!-- 主導覽（練習／查詢／知識三個獨立頁面）：
+         手機版是貼底分頁列，桌面版是左側常駐導覽欄，隨時可見、一鍵切換 -->
     <nav class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <span class="sidebar-title">🎹 和弦練習</span>
-        <button id="sidebarClose" class="icon-btn" aria-label="關閉選單">✕</button>
       </div>
       <button class="sidebar-item active" data-view="practice">
         <span class="sidebar-item-icon">🎯</span><span>練習</span>

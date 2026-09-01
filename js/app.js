@@ -123,7 +123,8 @@ function saveSettings(settings) {
 
     chordGen.setEnabledCategories(state.enabledCategories);
 
-    // 建立鋼琴鍵盤（可橫向捲動，跟查詢頁共用同一套元件，只認 pitch class）
+    // 建立鋼琴鍵盤（跟查詢頁共用同一套元件、同樣是可橫向捲動的完整鍵盤，
+    // 只是這裡只認 pitch class，不管實際八度）
     piano = new PianoWide('pianoContainer', {
       pitchClassMode: true,
       audio, onNoteClick: onNoteSelected,
@@ -408,7 +409,6 @@ function saveSettings(settings) {
 
     // 清除狀態
     clearSelection();
-    if (piano) piano.setRootNote(state.currentChord.root);
     hideFeedback();
     els.nextBtn.classList.add('hidden');
     els.submitBtn.classList.remove('hidden');
