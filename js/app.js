@@ -62,6 +62,7 @@ function saveSettings(settings) {
   const staff    = new StaffNotation('chordStaffDisplay');
   let piano    = null;
   let notation = null;
+  let pianoCentered = false; // 練習頁鍵盤只需要在第一次顯示時自動捲到中央 C 一次
 
   const $ = (sel) => document.querySelector(sel);
   const els = {
@@ -128,7 +129,11 @@ function saveSettings(settings) {
       pitchClassMode: true,
       audio, onNoteClick: onNoteSelected,
     });
-    requestAnimationFrame(() => piano.scrollToMiddleC());
+    // 練習頁現在不一定是預設頁面：如果一開始就是顯示狀態就直接捲，
+    // 否則等第一次切過來時（見 tabs.js 的 onShown）再捲，跟查詢頁用同一套邏輯
+    if (window.AppTabs) window.AppTabs.onShown('practice', centerPianoOnce);
+    const practiceViewEl = document.getElementById('practiceView');
+    if (practiceViewEl && !practiceViewEl.classList.contains('hidden')) centerPianoOnce();
 
     // 建立簡譜面板
     notation = new NotationMode('notationContainer', {
@@ -222,6 +227,12 @@ function saveSettings(settings) {
 
       container.appendChild(row);
     });
+  }
+
+  function centerPianoOnce() {
+    if (pianoCentered) return;
+    pianoCentered = true;
+    requestAnimationFrame(() => piano.scrollToMiddleC());
   }
 
   function registerServiceWorker() {
@@ -408,7 +419,6 @@ function saveSettings(settings) {
 
     // 清除狀態
     clearSelection();
-    if (piano) piano.setRootNote(state.currentChord.root);
     hideFeedback();
     els.nextBtn.classList.add('hidden');
     els.submitBtn.classList.remove('hidden');

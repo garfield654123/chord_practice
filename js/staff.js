@@ -155,6 +155,32 @@ class StaffNotation {
     this._draw(notes, 0, { label, colorMap: null });
   }
 
+  // 空狀態（查詢頁尚未按任何琴鍵時）：只畫空白五線譜＋調號，不畫音符。
+  // 讓查詢頁隨時都看得到五線譜，不會整塊消失／出現，也不會因為「有沒有選音符」讓版面跳動
+  renderEmpty(keyIndex) {
+    if (!this.container || !window.Vex) { this.clear(); return; }
+    const { Renderer, Stave } = Vex.Flow;
+
+    this.container.innerHTML = '';
+    this.container.classList.remove('hidden');
+
+    const keyInfo  = KEY_ACCIDENTALS[keyIndex] || KEY_ACCIDENTALS[0];
+    const sigCount = Math.max(keyInfo.sharps, keyInfo.flats);
+    const width    = 220 + sigCount * 11;
+    const height   = 160;
+
+    const renderer = new Renderer(this.container, Renderer.Backends.SVG);
+    renderer.resize(width, height);
+    const context = renderer.getContext();
+
+    const stave = new Stave(10, 12, width - 20);
+    stave.addClef('treble');
+    stave.addKeySignature(keyInfo.name);
+    stave.setContext(context).draw();
+
+    this._autoFitViewBox(width, height);
+  }
+
   // ── 內部：音符資料組裝 ──────────────────────────────────
   _buildNotes(pcs, chord, keyIndex) {
     const flats    = useFlatSpelling(keyIndex);

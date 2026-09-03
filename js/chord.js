@@ -277,3 +277,5 @@ window.DEGREE_NAMES            = DEGREE_NAMES;
 window.getIntervalFormula      = getIntervalFormula;
 window.getChordSymbol          = getChordSymbol;
 window.identifyChord           = identifyChord;
+window.MAJOR_SCALE_INTERVALS   = MAJOR_SCALE_INTERVALS;
+window.MAJOR_SCALE_TRIADS      = MAJOR_SCALE_TRIADS;

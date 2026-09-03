@@ -18,6 +18,27 @@
   let currentView = viewOrder.find(name => views[name] && !views[name].classList.contains('hidden')) || viewOrder[0];
   const shownListeners = {}; // { viewName: fn }，該頁第一次/每次顯示時要跑的事
 
+  // ========== 頂部標題列：標題文字 + 專屬按鈕，跟著目前頁面切換 ==========
+  // 標題文字直接沿用側邊欄該項目的 icon + 文字（單一資料來源，不用每加一頁就多改一處）；
+  // 換一題／設定只跟練習頁有關，用 view-page 元素上的 data-header-actions="true" 標記
+  // 哪個頁面要顯示這排按鈕，之後要加新頁面／改變哪頁該顯示，改 HTML 就好，這支不用改。
+  const appTitle      = document.getElementById('appTitle');
+  const headerActions = document.querySelector('.header-actions');
+
+  function applyChrome(name) {
+    const viewEl = views[name];
+    const navBtn = document.querySelector(`.sidebar-item[data-view="${name}"]`);
+    if (appTitle && navBtn) {
+      const icon  = navBtn.querySelector('.sidebar-item-icon')?.textContent || '';
+      const label = navBtn.lastElementChild?.textContent || '';
+      appTitle.textContent = [icon, label].filter(Boolean).join(' ');
+    }
+    if (headerActions) {
+      headerActions.classList.toggle('hidden', !viewEl || viewEl.dataset.headerActions !== 'true');
+    }
+  }
+  applyChrome(currentView);
+
   function switchView(target) {
     if (target === currentView || !views[target] || !views[currentView]) return;
 
@@ -27,6 +48,7 @@
 
     navItems.forEach(t => t.classList.toggle('active', t.dataset.view === target));
     currentView = target;
+    applyChrome(target);
 
     // 進場前：先移出畫面外、不套用 transition，避免出現閃一下的位移
     toEl.classList.remove('hidden');

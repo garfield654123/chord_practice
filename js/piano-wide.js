@@ -3,7 +3,7 @@
 // 兩種模式：
 // - pitchClassMode: true（練習頁）— 只認 pitch class（跟音名 12 音無關八度），
 //   點任何八度的同一個音都算選同一個音，API 相容原本的 PianoKeyboard
-//   （selectedNotes / getSelectedNotes / setRootNote / showWrongNotes...），
+//   （selectedNotes / getSelectedNotes / showWrongNotes...），
 //   這樣 app.js 幾乎不用改
 // - pitchClassMode: false（查詢頁，預設）— 追蹤實際按下的音高（pitch class + 八度），
 //   維持原本查詢頁需要的「知道低音是哪個八度」的行為
@@ -22,7 +22,6 @@ class PianoWide {
 
     this.held         = new Map(); // 查詢模式：實際按住的 {pc,octave}
     this.selectedNotes = new Set(); // 練習模式：已選的 pitch class
-    this.rootNote      = null;      // 練習模式：根音 pitch class
 
     this.render();
   }
@@ -88,15 +87,9 @@ class PianoWide {
     if (!this.pitchClassMode) return;
     this.container.querySelectorAll('.pw-key').forEach(key => {
       const pc = parseInt(key.dataset.pc, 10);
-      key.classList.remove('active', 'root-note');
-      if (pc === this.rootNote) key.classList.add('root-note');
-      else if (this.selectedNotes.has(pc)) key.classList.add('active');
+      key.classList.remove('active');
+      if (this.selectedNotes.has(pc)) key.classList.add('active');
     });
-  }
-
-  setRootNote(note) {
-    this.rootNote = note;
-    this._updateKeyStates();
   }
 
   showCorrectAnswer(notes) {
@@ -142,6 +135,22 @@ class PianoWide {
   // ── 查詢模式（實際音高）專用 ─────────────────────────────
   getHeldNotes() {
     return [...this.held.values()];
+  }
+
+  // 一次選取一整組音符，取代目前按住的（給「快速查詢」按鈕用：例如按下該調性
+  // 的 IV 級和弦，直接在鍵盤上點亮組成音，不用一個一個手動按）
+  // notes: [{pc, octave}, ...]；play: 是否同時播放這些音
+  selectHeld(notes, { play = false } = {}) {
+    if (this.pitchClassMode) return;
+    this.held.clear();
+    this.container.querySelectorAll('.pw-key.active').forEach(k => k.classList.remove('active'));
+    notes.forEach(({ pc, octave }) => {
+      this.held.set(`${pc}-${octave}`, { pc, octave });
+      const keyEl = this.container.querySelector(`.pw-key[data-pc="${pc}"][data-octave="${octave}"]`);
+      if (keyEl) keyEl.classList.add('active');
+      if (play && this.audio) this.audio.playNote(pc, octave, 0.9);
+    });
+    if (this.onChange) this.onChange(this.getHeldNotes());
   }
 
   // 捲動到中央 C（C4），方便剛切換過來時操作

@@ -44,6 +44,10 @@ html, body {
   height: 100svh;      /* 用「最小視口高度」取代 100vh，Safari 網址列收合/展開時畫面才不會跳動 */
   overflow: hidden;
   overscroll-behavior: none; /* 避免下拉回彈把整個 App 版面撐開/彈動 */
+  /* 避免瀏覽器在轉向／系統字級設定變動時自動放大文字（text auto-inflation），
+     這是「介面會隨字級跳動」的主因；版面本身以 px 精心排版，不需要瀏覽器介入 */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* ── Body 背景 ──────────────────────────────────────── */
@@ -362,8 +366,9 @@ body::before {
 .reset-btn:active { background: rgba(220,38,38,0.14); }
 
 /* ── Practice Area ──────────────────────────────────── */
-/* .practice-area 本身只負責上下排列「內容區」跟「鍵盤固定區」，
-   實際的內距/捲動交給 .view-content；鍵盤固定區才能真正貼底滿版 */
+/* .practice-area 上下排列三塊：可捲動的「內容區」、固定的「操作按鈕列」、
+   固定的「鍵盤固定區」；只有內容區會捲動（gap/內距在 .view-content 裡），
+   按鈕列跟鍵盤永遠貼在畫面上，內容再長也不會把按鈕擠出螢幕 */
 .practice-area {
   flex: 1;
   display: flex;
@@ -384,6 +389,21 @@ body::before {
   overscroll-behavior: contain;
   padding: 10px 12px;
 }
+
+/* ── 操作按鈕列（固定在內容區跟鍵盤之間，永遠不隨內容捲動） ─
+   問題背景：題目文字（和弦名、提示、回饋訊息...）長度不固定，
+   系統字級也可能被使用者調大；以前送出/下一題按鈕跟著內容區
+   一起捲動，內容一長就會被擠到螢幕外，手機上按不到。
+   現在獨立成固定列，永遠貼在鍵盤正上方、隨時可見可按。 ──── */
+.action-bar {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter:         blur(16px) saturate(180%);
+  border-top: 1px solid var(--glass-border);
+}
+.action-buttons-primary { margin-top: 8px; }
 
 /* ── 鍵盤固定區（貼底、滿版、不隨內容區捲動） ──────────── */
 .keyboard-tray {
@@ -679,6 +699,14 @@ body::before {
   color: white;
 }
 
+/* 調性列：折疊選單＋右側的副屬和弦開關 */
+.lookup-key-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+.lookup-key-row .lookup-key-group { flex: 1; min-width: 0; }
+
 /* 調性選單：預設折疊的 <details>，展開後才顯示 12 個調性按鈕 */
 .lookup-key-group {
   background: var(--glass);
@@ -720,6 +748,56 @@ body::before {
   padding: 0 14px 14px;
 }
 
+/* 副屬和弦開關（調性列右側）：跟調性折疊選單同高、寬度固定不會被擠壓 */
+.switch-field {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter:         blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.switch-field-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  line-height: 1.25;
+  text-align: center;
+}
+.switch-track { position: relative; flex-shrink: 0; width: 34px; height: 20px; }
+.switch-input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.switch-thumb {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.12);
+  border-radius: 999px;
+  transition: background 0.15s;
+}
+.switch-thumb::before {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  transition: transform 0.15s;
+}
+.switch-input:checked + .switch-thumb { background: var(--accent); }
+.switch-input:checked + .switch-thumb::before { transform: translateX(14px); }
+
 .pw-scroll {
   width: 100%;
   overflow-x: auto;
@@ -729,6 +807,51 @@ body::before {
   touch-action: pan-x; /* 限制只能水平滑動，避免跟垂直捲動搶手勢、卡頓 */
   padding: 4px 0;
 }
+
+/* ── 快速查詢列（查詢頁鋼琴正上方，目前調性的順階和弦按鈕） ───
+   位置在「清除／回到中央 C4」跟鋼琴鍵盤之間；卡片沒有塞滿一整排時置中，
+   但用 safe center：真的塞不下、需要滑動時自動退回靠左，確保左側內容
+   一定滑得到（純 center 在部分瀏覽器捲動容器裡會把左邊卡死，滑不到）*/
+.quick-chord-row {
+  display: flex;
+  justify-content: safe center;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-x;
+  padding: 0 12px 6px;
+}
+.quick-chord-btn {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 50px;
+  background: rgba(var(--accent-rgb), 0.14);
+  border: 1px solid rgba(var(--accent-rgb), 0.35);
+  border-radius: 10px;
+  padding: 6px 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  transition: all 0.15s;
+}
+/* :active 是手指按著當下的短暫回饋；.selected 是「目前琴鍵組成音」跟這個和弦完全相符時
+   的持續反白（見 js/lookup.js updateQuickChordSelection），兩者共用同一套深色樣式 */
+.quick-chord-btn:active,
+.quick-chord-btn.selected {
+  background: #3f4451; /* 灰色配色的深色版，點選時明顯反白區分 */
+  border-color: #3f4451;
+}
+.quick-chord-btn:active .quick-chord-symbol,
+.quick-chord-btn:active .quick-chord-degree,
+.quick-chord-btn.selected .quick-chord-symbol,
+.quick-chord-btn.selected .quick-chord-degree {
+  color: white;
+}
+.quick-chord-symbol { font-size: 14px; font-weight: 700; color: var(--accent); }
+.quick-chord-degree { font-size: 10px; color: var(--text-secondary); }
 .pw-keys {
   display: flex;
   position: relative;
@@ -793,17 +916,7 @@ body::before {
   box-shadow: 0 4px 12px rgba(var(--accent-rgb),0.40), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 
-/* 根音（金色標示，練習模式用） */
-.pw-white.root-note {
-  background: linear-gradient(180deg, #fef8d6 0%, #f5e070 100%);
-  border-color: #c9a227;
-  box-shadow: inset 0 0 0 2px #c9a227, 0 4px 10px rgba(201,162,39,0.30);
-}
-.pw-white.root-note .pw-label { color: #7a6210; font-weight: 800; }
-.pw-black.root-note {
-  background: linear-gradient(180deg, #c9a227 0%, #7a6210 100%);
-  box-shadow: 0 4px 12px rgba(201,162,39,0.45), inset 0 1px 0 rgba(255,255,255,0.2);
-}
+/* 根音金色標示已取消（練習模式作答前不再洩漏根音，鍵盤鍵位不加特殊底色） */
 
 /* 答題高亮（練習模式用） */
 .pw-white.correct-highlight {
@@ -1009,6 +1122,12 @@ body::before {
   text-shadow: 0 2px 12px rgba(var(--accent-rgb), 0.20);
 }
 
+/* 查詢頁的和弦名稱：字級比練習頁的題目小一號（這裡是辨識結果，不是主要視覺焦點），
+   也能降低長組合和弦（例如 C#dim7/G#）跑版換行、撐大整塊卡片的機率 */
+#lookupChordName {
+  font-size: 30px;
+}
+
 .chord-type {
   font-size: 13px;
   font-weight: 500;
@@ -1052,6 +1171,12 @@ body::before {
   width: 100%;
   max-width: 240px;
   height: auto;
+}
+
+/* 查詢頁的五線譜：預留高度比共用值再高一些（查詢頁常常按比較多音、加線較多），
+   減少因選了幾個音、和弦是否辨識出來，讓整塊卡片高度跳動的機率 */
+#lookupStaffDisplay {
+  min-height: 130px;
 }
 
 /* ── Feedback ───────────────────────────────────────── */
@@ -1387,20 +1512,28 @@ body::before {
   .view-content    { gap: 6px; padding: 8px 12px; }
   .chord-display   { padding: 10px 14px; }
   .chord-name      { font-size: 32px; }
+  #lookupChordName { font-size: 26px; }
   .score-bar       { padding: 4px; }
   .primary-btn     { padding: 13px; }
   .secondary-btn   { padding: 10px 14px; }
+  .action-bar      { padding: 6px 12px; }
+  .action-buttons-primary { margin-top: 6px; }
 }
 
 /* 矮螢幕 / 橫式 */
 @media (max-height: 600px) {
   .chord-display { padding: 6px 12px; }
   .chord-name    { font-size: 26px; }
+  #lookupChordName { font-size: 22px; }
   .nk-keys       { height: 130px; }
   .nk-white      { width: 38px; height: 130px; }
   .nk-black      { width: 24px; height: 82px; margin-left: -12px; margin-right: -12px; }
   .pw-white      { width: 26px; }
   .pw-black      { width: 16px; margin-left: -8px; margin-right: -8px; }
+  .action-bar    { padding: 5px 10px; }
+  .action-buttons-primary { margin-top: 5px; }
+  .primary-btn   { padding: 11px; font-size: 15px; }
+  .secondary-btn { padding: 8px 12px; font-size: 13px; }
 }
 
 /* 極窄螢幕（≤360px，如 iPhone SE 320px）：縮小簡譜鍵盤 */

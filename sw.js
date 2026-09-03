@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chord-practice-v20';
+const CACHE_NAME = 'chord-practice-v21';
 const BASE = '/chord_practice';
 const ASSETS = [
   BASE + '/',
@@ -42,6 +42,9 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // 只快取 GET 請求；cache.put() 對 POST 等其他方法的請求會直接丟例外
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       return cached || fetch(event.request).then((response) => {

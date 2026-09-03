@@ -22,9 +22,11 @@
     <header class="app-header">
       <div class="header-left">
         <button id="sidebarToggle" class="icon-btn" aria-label="選單">☰</button>
-        <h1>🎹 和弦練習</h1>
+        <!-- 標題會依目前頁面動態更新（見 js/tabs.js），這裡的文字只是 JS 執行前的預設值 -->
+        <h1 id="appTitle">🔍 和弦查詢</h1>
       </div>
-      <div class="header-actions">
+      <!-- 換一題／設定只跟練習頁有關，只在練習頁顯示（見 js/tabs.js applyChrome） -->
+      <div class="header-actions hidden">
         <button id="refreshBtn"  class="icon-btn" aria-label="換一題">🔄</button>
         <button id="settingsBtn" class="icon-btn" aria-label="設定">⚙️</button>
       </div>
@@ -39,10 +41,10 @@
         <span class="sidebar-title">🎹 和弦練習</span>
         <button id="sidebarClose" class="icon-btn" aria-label="關閉選單">✕</button>
       </div>
-      <button class="sidebar-item active" data-view="practice">
+      <button class="sidebar-item" data-view="practice">
         <span class="sidebar-item-icon">🎯</span><span>練習</span>
       </button>
-      <button class="sidebar-item" data-view="lookup">
+      <button class="sidebar-item active" data-view="lookup">
         <span class="sidebar-item-icon">🔍</span><span>和弦查詢</span>
       </button>
       <button class="sidebar-item" data-view="knowledge">
@@ -116,8 +118,8 @@
     <!-- 頁籤內容（左右滑動切換） -->
     <div class="view-stack" id="viewStack">
 
-    <!-- 主練習區 -->
-    <main class="practice-area view-page" id="practiceView">
+    <!-- 主練習區（data-header-actions：這頁顯示時才顯示頂部的換一題／設定按鈕，見 js/tabs.js） -->
+    <main class="practice-area view-page hidden" id="practiceView" data-header-actions="true">
 
       <div class="view-content">
 
@@ -162,17 +164,20 @@
           <span class="selected-notes" id="selectedNotesText">尚未選擇</span>
         </div>
 
-        <!-- 操作按鈕 -->
+      </div>
+
+      <!-- 操作按鈕列（固定貼在鍵盤上方，不隨內容區捲動，避免文字/內容變長時
+           把「送出答案」等按鈕擠到畫面外、手機上按不到） -->
+      <div class="action-bar">
         <div class="action-buttons">
           <button id="clearBtn"        class="action-btn secondary-btn">清除</button>
           <button id="playSelectedBtn" class="action-btn secondary-btn">🎵 試聽</button>
           <button id="listenBtn"       class="action-btn secondary-btn">🔊 聽題</button>
         </div>
-        <div class="action-buttons" style="margin-top:8px">
+        <div class="action-buttons action-buttons-primary">
           <button id="submitBtn" class="action-btn primary-btn full-width">送出答案</button>
           <button id="nextBtn"   class="action-btn primary-btn full-width hidden">下一題 →</button>
         </div>
-
       </div>
 
       <!-- 鍵盤固定區（滿版、貼底，跟查詢頁的 88 鍵鋼琴同一套結構） -->
@@ -187,42 +192,52 @@
 
     </main>
 
-    <!-- 和弦查詢頁 -->
-    <section class="lookup-area view-page hidden" id="lookupView">
+    <!-- 和弦查詢頁（預設頁面） -->
+    <section class="lookup-area view-page" id="lookupView">
 
       <div class="view-content">
 
-        <!-- 調性（預設折疊） -->
-        <details class="lookup-key-group" id="lookupKeyGroup">
-          <summary class="lookup-key-summary">
-            <span class="lookup-key-summary-label">調性</span>
-            <span class="lookup-key-summary-value" id="lookupKeySummaryValue">C</span>
-            <span class="lookup-key-chevron">▾</span>
-          </summary>
-          <div class="key-selector" id="lookupKeySelector">
-            <button class="key-btn active" data-key="0">C</button>
-            <button class="key-btn" data-key="1">C#/Db</button>
-            <button class="key-btn" data-key="2">D</button>
-            <button class="key-btn" data-key="3">D#/Eb</button>
-            <button class="key-btn" data-key="4">E</button>
-            <button class="key-btn" data-key="5">F</button>
-            <button class="key-btn" data-key="6">F#/Gb</button>
-            <button class="key-btn" data-key="7">G</button>
-            <button class="key-btn" data-key="8">G#/Ab</button>
-            <button class="key-btn" data-key="9">A</button>
-            <button class="key-btn" data-key="10">A#/Bb</button>
-            <button class="key-btn" data-key="11">B</button>
-          </div>
-        </details>
+        <!-- 調性（預設折疊）＋ 副屬和弦開關（調性右方） -->
+        <div class="lookup-key-row">
+          <details class="lookup-key-group" id="lookupKeyGroup">
+            <summary class="lookup-key-summary">
+              <span class="lookup-key-summary-label">調性</span>
+              <span class="lookup-key-summary-value" id="lookupKeySummaryValue">C</span>
+              <span class="lookup-key-chevron">▾</span>
+            </summary>
+            <div class="key-selector" id="lookupKeySelector">
+              <button class="key-btn active" data-key="0">C</button>
+              <button class="key-btn" data-key="1">C#/Db</button>
+              <button class="key-btn" data-key="2">D</button>
+              <button class="key-btn" data-key="3">D#/Eb</button>
+              <button class="key-btn" data-key="4">E</button>
+              <button class="key-btn" data-key="5">F</button>
+              <button class="key-btn" data-key="6">F#/Gb</button>
+              <button class="key-btn" data-key="7">G</button>
+              <button class="key-btn" data-key="8">G#/Ab</button>
+              <button class="key-btn" data-key="9">A</button>
+              <button class="key-btn" data-key="10">A#/Bb</button>
+              <button class="key-btn" data-key="11">B</button>
+            </div>
+          </details>
+          <label class="switch-field" for="secondaryDominantToggle">
+            <span class="switch-field-label">副屬<br>和弦</span>
+            <span class="switch-track">
+              <input type="checkbox" id="secondaryDominantToggle" class="switch-input">
+              <span class="switch-thumb"></span>
+            </span>
+          </label>
+        </div>
 
         <!-- 辨識結果 -->
         <div class="chord-display">
           <div class="chord-name" id="lookupChordName">--</div>
           <div class="chord-type" id="lookupNotesText">尚未按任何琴鍵</div>
+          <div class="chord-extra hidden" id="lookupSecondaryDominant"></div>
           <div class="chord-staff hidden" id="lookupStaffDisplay"></div>
         </div>
 
-        <div class="action-buttons" style="margin-top:10px">
+        <div class="action-buttons action-buttons-primary">
           <button id="lookupClearBtn"  class="action-btn secondary-btn">清除</button>
           <button id="lookupCenterBtn" class="action-btn secondary-btn">回到中央 C4</button>
         </div>
@@ -231,6 +246,8 @@
 
       <!-- 鍵盤固定區（滿版、貼底） -->
       <div class="keyboard-tray">
+        <!-- 快速查詢：目前調性的順階和弦，一按就直接在鍵盤上點亮組成音 -->
+        <div class="quick-chord-row" id="lookupQuickChords"></div>
         <div class="pw-scroll" id="pianoWideScroll">
           <div id="pianoWideContainer"></div>
         </div>
