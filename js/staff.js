@@ -92,6 +92,7 @@ class StaffNotation {
     if (!this.container) return;
     this.container.innerHTML = '';
     this.container.classList.add('hidden');
+    this.container.classList.remove('staff-multi');
   }
 
   // 即時預覽（作答前）：只顯示目前已選的音，不透露和弦名稱、不標色
@@ -121,8 +122,10 @@ class StaffNotation {
 
   // 直接依「實際按下的音高」繪製（和弦查詢頁用）：不重排八度、不強制擠在同一音域，
   // pitches 需已含 {pc, octave}；spellMap 可傳入辨識到的和弦拼字（讓拼法更道地），
-  // 沒有的音則退回一般調性拼字
-  renderPitches(pitches, keyIndex, { label = null, spellMap = null, colorMap = null } = {}) {
+  // 沒有的音則退回一般調性拼字。
+  // secondaryDominant（查詢頁「副屬和弦」開關開著時傳入）：{ root, label }，
+  // 會在同一行譜表多畫一組副屬和弦（灰色，跟目前和弦區分），不用另外開一張圖
+  renderPitches(pitches, keyIndex, { label = null, spellMap = null, colorMap = null, secondaryDominant = null } = {}) {
     if (!pitches || pitches.length === 0) { this.clear(); return; }
     const flats  = useFlatSpelling(keyIndex);
     const sorted = [...pitches].sort((a, b) => (a.octave * 12 + a.pc) - (b.octave * 12 + b.pc));
@@ -130,6 +133,18 @@ class StaffNotation {
       const spelled = (spellMap && spellMap.get(p.pc)) || spellPitchClass(p.pc, flats);
       return { pc: p.pc, letter: spelled.letter, accidental: spelled.accidental, octave: p.octave };
     });
+
+    if (secondaryDominant) {
+      const secPcs   = CHORD_TYPES['7'].intervals.map(i => (secondaryDominant.root + i) % 12);
+      const secChord = { root: secondaryDominant.root, type: '7' };
+      const secNotes = this._buildNotes(secPcs, secChord, keyIndex);
+      this._drawGroups([
+        { notes, label },
+        { notes: secNotes, label: `→ ${secondaryDominant.label}`, dim: true },
+      ], keyIndex);
+      return;
+    }
+
     this._draw(notes, keyIndex, { label, colorMap });
   }
 
@@ -163,6 +178,7 @@ class StaffNotation {
 
     this.container.innerHTML = '';
     this.container.classList.remove('hidden');
+    this.container.classList.remove('staff-multi');
 
     const keyInfo  = KEY_ACCIDENTALS[keyIndex] || KEY_ACCIDENTALS[0];
     const sigCount = Math.max(keyInfo.sharps, keyInfo.flats);
@@ -205,6 +221,7 @@ class StaffNotation {
 
     this.container.innerHTML = '';
     this.container.classList.remove('hidden');
+    this.container.classList.remove('staff-multi');
 
     const keyInfo  = KEY_ACCIDENTALS[keyIndex] || KEY_ACCIDENTALS[0];
     const sigCount = Math.max(keyInfo.sharps, keyInfo.flats);
@@ -255,6 +272,70 @@ class StaffNotation {
     stave.setContext(context).draw();
 
     Formatter.FormatAndDraw(context, stave, [staveNote]);
+
+    this._autoFitViewBox(width, height);
+  }
+
+  // 同一行譜表依序畫多組和弦（目前只有查詢頁「副屬和弦」開關開著時會用到，2 組：
+  // 目前和弦 → 副屬和弦）。groups: [{ notes, label, dim }]；dim 為 true 的那組
+  // （副屬和弦）畫成灰色，跟主要和弦的黑色音符／粗體標籤區分開
+  _drawGroups(groups, keyIndex) {
+    if (!this.container || !window.Vex || groups.some(g => !g.notes || g.notes.length === 0)) {
+      this.clear();
+      return;
+    }
+    const { Renderer, Stave, StaveNote, Accidental, Annotation, Formatter } = Vex.Flow;
+    const DIM_COLOR = '#6b7280'; // 跟查詢頁快速查詢卡片同一套灰色主題色
+
+    this.container.innerHTML = '';
+    this.container.classList.remove('hidden');
+    this.container.classList.toggle('staff-multi', groups.length > 1); // CSS 放寬最大寬度，見 style.css
+
+    const keyInfo  = KEY_ACCIDENTALS[keyIndex] || KEY_ACCIDENTALS[0];
+    const sigCount = Math.max(keyInfo.sharps, keyInfo.flats);
+
+    const staveNotes = groups.map(({ notes, label, dim }) => {
+      const keys = notes.map(n => {
+        const acc = n.accidental === 1 ? '#' : n.accidental === -1 ? 'b' : '';
+        return `${n.letter.toLowerCase()}${acc}/${n.octave}`;
+      });
+      const staveNote = new StaveNote({ keys, duration: 'q', clef: 'treble' });
+
+      notes.forEach((n, i) => {
+        const sigAcc = keySignatureAccidental(n.letter, keyIndex);
+        if (n.accidental !== sigAcc) {
+          const code   = n.accidental === 1 ? '#' : n.accidental === -1 ? 'b' : 'n';
+          const accMod = new Accidental(code);
+          if (dim) accMod.setStyle({ fillStyle: DIM_COLOR, strokeStyle: DIM_COLOR });
+          staveNote.addModifier(accMod, i);
+        }
+        if (dim) staveNote.setKeyStyle(i, { fillStyle: DIM_COLOR, strokeStyle: DIM_COLOR });
+      });
+
+      if (label) {
+        const annotation = new Annotation(label)
+          .setVerticalJustification(Annotation.VerticalJustify.TOP)
+          .setFont('Arial, sans-serif', dim ? 12 : 15, dim ? 'normal' : 'bold');
+        if (dim) annotation.setStyle({ fillStyle: DIM_COLOR, strokeStyle: DIM_COLOR });
+        staveNote.addModifier(annotation, 0);
+      }
+      return staveNote;
+    });
+
+    // 畫布尺寸先粗抓，每多一組和弦多留一些橫向空間，繪製完後再依實際內容自動裁切 viewBox
+    const width  = 220 + sigCount * 11 + (groups.length - 1) * 90;
+    const height = 190;
+
+    const renderer = new Renderer(this.container, Renderer.Backends.SVG);
+    renderer.resize(width, height);
+    const context = renderer.getContext();
+
+    const stave = new Stave(10, 32, width - 20);
+    stave.addClef('treble');
+    stave.addKeySignature(keyInfo.name);
+    stave.setContext(context).draw();
+
+    Formatter.FormatAndDraw(context, stave, staveNotes);
 
     this._autoFitViewBox(width, height);
   }

@@ -1179,6 +1179,13 @@ body::before {
   min-height: 130px;
 }
 
+/* 副屬和弦開關開著時，五線譜要多畫一組和弦（見 js/staff.js _drawGroups），
+   放寬最大寬度讓兩組和弦不會擠在一起；width:100% 仍會被卡片實際寬度限制住，
+   在窄螢幕上不會爆版 */
+#lookupStaffDisplay.staff-multi .staff-svg {
+  max-width: 320px;
+}
+
 /* ── Feedback ───────────────────────────────────────── */
 .feedback {
   text-align: center;

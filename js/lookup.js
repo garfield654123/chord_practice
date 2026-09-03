@@ -127,15 +127,22 @@
     });
   }
 
-  // 副屬和弦（V7/x）：目標和弦根音往上一個純五度、蓋一個屬七和弦，開關開著且有辨識出和弦時才顯示
-  function updateSecondaryDominant(root) {
+  // 副屬和弦（V7/x）：目標和弦根音往上一個純五度、蓋一個屬七和弦；
+  // 開關開著且有辨識出和弦時才回傳 { root, label }，否則回傳 null
+  // （文字說明列、五線譜要顯示的內容共用同一份計算結果，兩邊才不會兜不起來）
+  function getSecondaryDominant(root) {
+    if (root == null || !state.showSecondaryDominant) return null;
+    const secRoot = (root + 7) % 12;
+    return { root: secRoot, label: getChordSymbol(secRoot, '7') };
+  }
+
+  function updateSecondaryDominantText(secDom) {
     if (!els.secDomDisplay) return;
-    if (root == null || !state.showSecondaryDominant) {
+    if (!secDom) {
       els.secDomDisplay.classList.add('hidden');
       return;
     }
-    const secRoot = (root + 7) % 12;
-    els.secDomDisplay.textContent = `副屬和弦：${getChordSymbol(secRoot, '7')}`;
+    els.secDomDisplay.textContent = `副屬和弦：${secDom.label}`;
     els.secDomDisplay.classList.remove('hidden');
   }
 
@@ -145,7 +152,7 @@
       els.notesText.textContent = '尚未按任何琴鍵';
       // 顯示空白五線譜（而非整塊隱藏），維持版面穩定、也讓查詢頁隨時都看得到五線譜
       staff.renderEmpty(state.keyIndex);
-      updateSecondaryDominant(null);
+      updateSecondaryDominantText(null);
       updateQuickChordSelection([]);
       return;
     }
@@ -176,11 +183,13 @@
     }
 
     els.chordName.textContent = label || noteNames[0];
+    const secDom = getSecondaryDominant(matchedRoot);
     staff.renderPitches(heldNotes, state.keyIndex, {
       label: heldNotes.length >= 2 ? label : null,
       spellMap,
+      secondaryDominant: secDom,
     });
-    updateSecondaryDominant(matchedRoot);
+    updateSecondaryDominantText(secDom);
     updateQuickChordSelection(pcs);
   }
 
